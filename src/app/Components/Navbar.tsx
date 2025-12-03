@@ -13,7 +13,10 @@ const Navbar = () => {
     { id: 'a-propos', label: 'À Propos', href: '/a-propos' },
     { id: 'contact', label: 'Contact', href: '/contact' }
   ];
-
+const users = [
+    { id: 'accueil', username: 'Accueil', href: '/' },
+    
+  ];
   return (
     <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
