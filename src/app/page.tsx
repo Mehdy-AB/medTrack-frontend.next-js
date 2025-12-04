@@ -1,13 +1,7 @@
-import Navbar from './Components/Navbar';
-import Header from './Components/HeaderProps';
+import Link from 'next/link';
+import HeroSection from './Components/LandingPage/HeroSectionProps';
 export default function Home() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <Header spaceName="Espace Encadrant" notificationCount={5} />
-      </main>
-       
-    </>
+    <> <HeroSection title={''} subtitle={''} buttonText={''} buttonLink={''} imagePath={''} /></>
   );
 }
