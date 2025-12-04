@@ -49,10 +49,6 @@ const Sidebar = () => {
     return null;
   }
 
-  // Items communs à tous les espaces
-  const commonItems: SidebarItem[] = [
-    { id: 'profile', label: 'Profile', icon: <User size={20} />, href: `/${currentSpace === 'tableau-de-bord' ? 'tableau-de-bord' : `espace-${currentSpace}`}/profile` },
-  ];
 
   // Items spécifiques à chaque espace selon vos besoins
   const spaceSpecificItems: Record<string, SidebarItem[]> = {
@@ -63,6 +59,7 @@ const Sidebar = () => {
       { id: 'rapports-stage', label: 'Rapports Stage', icon: <FileText size={20} />, href: '/espace-etudiant/rapports-stage' },
       { id: 'planning', label: 'Planning', icon: <Calendar size={20} />, href: '/espace-etudiant/planning' },
       { id: 'messagerie', label: 'Messagerie', icon: <MessageSquare size={20} />, href: '/espace-etudiant/messagerie' },
+      { id: 'profile', label: 'Profile', icon: <User size={20} />, href: '/espace-etudiant/profile' },
     ],
     encadrant: [
       { id: 'accueil', label: 'Accueil Encadrant', icon: <Home size={20} />, href: '/espace-encadrant' },
@@ -72,6 +69,8 @@ const Sidebar = () => {
       { id: 'presences', label: 'Présences', icon: <Clock size={20} />, href: '/espace-encadrant/presences' },
       { id: 'messagerie', label: 'Messagerie', icon: <MessageSquare size={20} />, href: '/espace-encadrant/messagerie' },
       { id: 'rapports', label: 'Rapports', icon: <FileText size={20} />, href: '/espace-encadrant/rapports' },
+      { id: 'profile', label: 'Profile', icon: <User size={20} />, href: '/espace-encadrant/profile' },
+      
     ],
     etablissement: [
       { id: 'dashboard', label: 'Tableau de Bord', icon: <Home size={20} />, href: '/espace-etablissement' },
@@ -90,10 +89,11 @@ const Sidebar = () => {
       { id: 'gestion-hopitaux', label: 'Gestion des Hôpitaux', icon: <Hospital size={20} />, href: '/tableau-de-bord/gestion-hopitaux' },
       { id: 'rapports-statistiques', label: 'Rapports et Statistiques', icon: <BarChart3 size={20} />, href: '/tableau-de-bord/rapports-statistiques' },
       { id: 'maintenance-parametres', label: 'Maintenance/Paramètres', icon: <Wrench size={20} />, href: '/tableau-de-bord/maintenance-parametres' },
+      { id: 'profile', label: 'Profile', icon: <User size={20} />, href: '/tableau-de-bord/profile' },
     ]
   };
 
-  const allItems = [...spaceSpecificItems[currentSpace], ...commonItems];
+  const allItems = [...spaceSpecificItems[currentSpace]];
 
   const isActive = (href: string) => pathname === href;
 
