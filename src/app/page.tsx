@@ -1,7 +1,15 @@
-import Link from 'next/link';
-import HeroSection from './Components/LandingPage/HeroSectionProps';
+"use client";
+import Navbar from './Components/Navbar';
+import Header from './Components/HeaderProps';
+import Footer from './Components/Footer';
 export default function Home() {
   return (
-    <> <HeroSection title={''} subtitle={''} buttonText={''} buttonLink={''} imagePath={''} /></>
+    <>
+      <Navbar />
+      <main>
+        <Header spaceName="Acceuil" notificationCount={5} />
+      </main>
+      <Footer/> 
+    </>
   );
-}
+} 
