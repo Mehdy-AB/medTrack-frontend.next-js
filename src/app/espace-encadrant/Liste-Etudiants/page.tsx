@@ -29,43 +29,42 @@ export default function ListeEtudiantsPage() {
   const filteredStudents = useMemo(() => {
     let result = [...mockStudents];
 
-    // Recherche
-// Recherche (exacte pour les notes, texte pour le reste, date uniquement si format complet)
-if (searchQuery.trim()) {
-  const query = searchQuery.toLowerCase();
+    // Recherche (exacte pour les notes, texte pour le reste, date uniquement si format complet)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
 
-  // Vérifier si l'utilisateur tape un nombre → recherche EXACTE sur les notes
-  const numericQuery = Number(searchQuery);
-  const isExactNumber = !isNaN(numericQuery) && searchQuery.trim() !== '';
+      // Vérifier si l'utilisateur tape un nombre → recherche EXACTE sur les notes
+      const numericQuery = Number(searchQuery);
+      const isExactNumber = !isNaN(numericQuery) && searchQuery.trim() !== '';
 
-  // Vérifier si c'est une date du type JJ/MM/AAAA
-  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-  const isFullDate = dateRegex.test(searchQuery.trim());
+      // Vérifier si c'est une date du type JJ/MM/AAAA
+      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+      const isFullDate = dateRegex.test(searchQuery.trim());
 
-  result = result.filter((student) => {
-    // 1) Recherche exacte des notes
-    if (isExactNumber) {
-      return student.note === numericQuery;
+      result = result.filter((student) => {
+        // 1) Recherche exacte des notes
+        if (isExactNumber) {
+          return student.note === numericQuery;
+        }
+
+        // 2) Recherche date (format complet seulement)
+        if (isFullDate) {
+          return (
+            student.dateDebut === searchQuery ||
+            student.dateFin === searchQuery
+          );
+        }
+
+        // 3) Recherche textuelle normale
+        return (
+          student.nom.toLowerCase().includes(query) ||
+          student.matricule.toLowerCase().includes(query) ||
+          student.specialite.toLowerCase().includes(query) ||
+          student.statut.toLowerCase().includes(query) ||
+          student.stageActuel.toLowerCase().includes(query)
+        );
+      });
     }
-
-    // 2) Recherche date (format complet seulement)
-    if (isFullDate) {
-      return (
-        student.dateDebut === searchQuery ||
-        student.dateFin === searchQuery
-      );
-    }
-
-    // 3) Recherche textuelle normale
-    return (
-      student.nom.toLowerCase().includes(query) ||
-      student.matricule.toLowerCase().includes(query) ||
-      student.specialite.toLowerCase().includes(query) ||
-      student.statut.toLowerCase().includes(query) ||
-      student.stageActuel.toLowerCase().includes(query)
-    );
-  });
-}
 
     // Filtres
     if (filters.promotion) {
@@ -107,8 +106,8 @@ if (searchQuery.trim()) {
         <Sidebar />
         
         {/* Contenu principal */}
-        <main className="flex-1 bg-white">
-          <div className="max-w-7xl mx-auto p-8">
+        <main className="flex-1 bg-white overflow-x-hidden">
+          <div className="w-full p-8">
             {/* En-tête avec titre et MiniCard */}
             <div className="mb-8">
               <div className="flex items-start justify-between mb-6">
@@ -142,7 +141,9 @@ if (searchQuery.trim()) {
             </div>
 
             {/* Tableau */}
-            <TableListe students={paginatedStudents} />
+            <div className="w-full">
+              <TableListe students={paginatedStudents} />
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (

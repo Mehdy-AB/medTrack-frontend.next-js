@@ -15,7 +15,7 @@ const Header = ({ spaceName, notificationCount = 0 }: HeaderProps) => {
     <div className="bg-white px-4 sm:px-6 lg:px-8 pt-6 pb-4">
       <div className="max-w-7xl mx-auto">
         {/* Container avec fond gris et bordures arrondies */}
-        <div className="bg-[#EBEBEB]/15 rounded-2xl px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#EBEBEB]/30 rounded-2xl px-6 py-4 flex items-center justify-between">
           {/* Nom de l'espace */}
           <h1 className="text-xl font-semibold text-gray-800">
             {spaceName}

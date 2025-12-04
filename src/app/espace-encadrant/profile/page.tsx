@@ -1,9 +1,9 @@
 "use client";
 
-import Navbar from '../../Components/Navbar';
+import NavbarEncadrant from '../components/Navbar';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import Sidebar from '../../Components/Sidebar';
+import SidebarEncadrant from '../components/Sidebar';
 import Profile from '../../Components/Profile';
 import { ProfileData } from '../../../types/profile.types';
 import { useRouter } from 'next/navigation';
@@ -33,11 +33,11 @@ export default function EncadrantProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <NavbarEncadrant />
       <Header spaceName="Espace Encadrant" notificationCount={5} />
       
       <div className="flex flex-1">
-        <Sidebar />
+        <SidebarEncadrant />
         <Profile data={encadrantData} onLogout={handleLogout} />
       </div>
       

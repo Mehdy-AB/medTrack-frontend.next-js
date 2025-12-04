@@ -1,13 +1,19 @@
 "use client";
 import Navbar from './Components/Navbar';
-import Header from './Components/HeaderProps';
+import Hero from './Components/Hero';
+import Features from './Components/Featurs';
+import Testimonials from './Components/Testimonials';
+import CallToAction from './Components/CallToAction';
 import Footer from './Components/Footer';
 export default function Home() {
   return (
     <>
       <Navbar />
       <main>
-        <Header spaceName="Acceuil" notificationCount={5} />
+        <Hero />
+        <Features />
+        <Testimonials />
+        <CallToAction />
       </main>
       <Footer/> 
     </>
