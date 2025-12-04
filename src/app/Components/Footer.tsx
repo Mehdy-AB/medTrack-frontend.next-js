@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer className="relative bg-[#42BABA]/[0.5] pb-8 mt-30">
+    <footer className="relative bg-[#42BABA]/50 pb-8 mt-30">
 
       {/* Wave decoration at top */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none" style={{ height: '80px', transform: 'translateY(-100%)' }}>

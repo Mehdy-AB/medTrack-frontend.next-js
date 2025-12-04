@@ -98,7 +98,7 @@ const Sidebar = () => {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="w-70 bg-gradient-to-b from-white to-gray-50/30 border-r border-gray-200 h-full">
+    <div className="w-70 bg-linear-to-b from-white to-gray-50/30 border-r border-gray-200 h-full">
       <div className="flex flex-col h-full">
         
         {/* Navigation principale */}
