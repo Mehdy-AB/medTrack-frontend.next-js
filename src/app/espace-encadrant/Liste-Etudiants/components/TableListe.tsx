@@ -11,24 +11,14 @@ interface TableListeProps {
 }
 
 const TableListe = ({ students }: TableListeProps) => {
-  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  const handleRowHover = (studentId: string) => {
-    setHoveredRow(studentId);
+  const handleRowEnter = (studentId: string) => {
     setActiveMenu(studentId);
   };
 
   const handleRowLeave = () => {
-    // Délai pour permettre le passage au menu
-    setTimeout(() => {
-      setHoveredRow(null);
-    }, 100);
-  };
-
-  const handleMenuClose = () => {
     setActiveMenu(null);
-    setHoveredRow(null);
   };
 
   // Fonction pour déterminer la couleur du statut
@@ -39,7 +29,7 @@ const TableListe = ({ students }: TableListeProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="w-full bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -77,7 +67,7 @@ const TableListe = ({ students }: TableListeProps) => {
             {students.map((student) => (
               <tr
                 key={student.id}
-                onMouseEnter={() => handleRowHover(student.id)}
+                onMouseEnter={() => handleRowEnter(student.id)}
                 onMouseLeave={handleRowLeave}
                 className="hover:bg-gray-50 transition-colors cursor-pointer relative"
               >
@@ -88,11 +78,13 @@ const TableListe = ({ students }: TableListeProps) => {
                       alt={student.nom}
                       className="w-10 h-10 rounded-full object-cover"
                     />
-                    <RowActionMenu
-                      student={student}
-                      isVisible={activeMenu === student.id}
-                      onClose={handleMenuClose}
-                    />
+                    {activeMenu === student.id && (
+                      <RowActionMenu
+                        student={student}
+                        isVisible={true}
+                        onClose={() => setActiveMenu(null)}
+                      />
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 font-medium">
