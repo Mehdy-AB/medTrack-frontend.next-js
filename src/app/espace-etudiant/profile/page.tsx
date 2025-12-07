@@ -1,9 +1,11 @@
 "use client";
 
-import Navbar from '../../Components/Navbar';
+//import Navbar from '../../Components/Navbar';
+import NavbarEtudiant from '../Components/NavbarEtudiant';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import Sidebar from '../../Components/Sidebar';
+//import Sidebar from '../../Components/Sidebar';
+import SidebarEtudiant from '../Components/SidebarEtudiant';
 import Profile from '../../Components/Profile';
 import { ProfileData } from '../../../types/profile.types';
 import { useRouter } from 'next/navigation';
@@ -32,11 +34,11 @@ export default function EtudiantProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <NavbarEtudiant />
       <Header spaceName="Espace Étudiant" notificationCount={2} />
       
       <div className="flex flex-1">
-        <Sidebar />
+        <SidebarEtudiant />
         <Profile data={studentData} onLogout={handleLogout} />
       </div>
       

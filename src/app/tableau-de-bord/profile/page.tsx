@@ -1,9 +1,11 @@
 "use client";
 
-import Navbar from '../../Components/Navbar';
+//import Navbar from '../../Components/Navbar';
+import NavbarAdmin from '../Components/NavbarAdmin';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import Sidebar from '../../Components/Sidebar';
+//import Sidebar from '../../Components/Sidebar';
+import SidebarEtudiant from '@/app/espace-etudiant/Components/SidebarEtudiant';
 import Profile from '../../Components/Profile';
 import { ProfileData } from '../../../types/profile.types';
 import { useRouter } from 'next/navigation';
@@ -33,11 +35,11 @@ export default function AdminProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <NavbarAdmin />
       <Header spaceName="Tableau de Bord Admin" notificationCount={12} />
       
       <div className="flex flex-1">
-        <Sidebar />
+        <SidebarEtudiant />
         <Profile data={adminData} onLogout={handleLogout} />
       </div>
       

@@ -54,7 +54,7 @@ export default function ContactPage() {
           {/* Header - En haut */}
           <div className="mb-12">
              <h1 className="text-4xl font-bold text-gray-900 mb-4">Contactez-Nous</h1>
-             <p className="text-gray-600 max-w-3xl">
+             <p className="text-gray-600 ">
                  Une Question, Une Suggestion, Ou Un Problème ? Remplissez Le Formulaire Ci-Dessous Ou Contactez-Nous Via Les Coordonnées Officielles.
              </p>
           </div>

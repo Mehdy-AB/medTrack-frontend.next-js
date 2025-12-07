@@ -3,7 +3,7 @@
 import Navbar from '../../Components/Navbar';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import Sidebar from '../../Components/Sidebar';
+import Sidebar from '../../Components/Sidebar'; 
 import Profile from '../../Components/Profile';
 import { ProfileData } from '../../../types/profile.types';
 import { useRouter } from 'next/navigation';

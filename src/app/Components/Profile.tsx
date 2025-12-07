@@ -21,13 +21,7 @@ const Profile: React.FC<ProfileProps> = ({
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900">Mon Profile</h1>
-          <button 
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-            aria-label="Fermer"
-          >
-            <X size={24} />
-          </button>
+          <h1 className="text-2xl font-semibold text-gray-900">Mon Profil</h1>
         </div>
 
         {/* Profile Photo and Basic Info */}
