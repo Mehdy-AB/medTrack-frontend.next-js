@@ -20,7 +20,7 @@ export default function MonStagePage() {
         <SidebarEtudiant />
         
         {/* Contenu principal */}
-        <main className="flex-1 bg-gray-50">
+        <main className="flex-1  bg-gray-50">
           <div className="max-w-7xl mx-auto p-8">
             
             {/* En-tête avec carte de bienvenue */}

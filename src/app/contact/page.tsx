@@ -66,7 +66,7 @@ export default function ContactPage() {
             {/* Informations - À gauche */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Faculté De Médecine – Université M'hamed Bougara De Boumerdès (UMBB)
+                Faculté De Médecine – Université M&apos;hamed Bougara De Boumerdès (UMBB)
               </h2>
               
               <div className="space-y-6">
@@ -78,7 +78,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">Adresse</h3>
                     <p className="text-gray-600">
-                      Avenue de l'Indépendance,<br />
+                      Avenue de l&apos;Indépendance,<br />
                       Boumerdès 35000, Algérie
                     </p>
                   </div>

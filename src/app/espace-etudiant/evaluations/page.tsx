@@ -22,15 +22,15 @@ export default function MesEvaluationsPage() {
   const stagesEnCours = mockEvaluationsHistorique.filter(e => e.statut === 'En cours').length;
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <NavbarEtudiant />
       <Header spaceName="Espace Étudiant" notificationCount={2} />
       
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex flex-1">
         <SidebarEtudiant />
         
         {/* Contenu principal */}
-        <main className="flex-1 bg-gray-50">
+        <main className="flex-1 ml-6 rounded-2xl bg-gray-50 overflow-x-auto">
           <div className="max-w-7xl mx-auto p-8">
             
             {/* En-tête */}
@@ -112,6 +112,6 @@ export default function MesEvaluationsPage() {
       </div>
       
       <Footer />
-    </>
+    </div>
   );
 }

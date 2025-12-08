@@ -85,7 +85,7 @@ const SidebarAdmin = () => {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="w-72 bg-gradient-to-b from-white to-gray-50/30 border-r border-gray-200 h-full flex flex-col">
+    <aside className="w-65 shrink-0 ml-6 bg-[#EBEBEB]/30 rounded-2xl h-full flex flex-col">
       {/* Navigation principale */}
       <nav className="flex-1 p-6 overflow-y-auto">
         <div className="space-y-1">
@@ -124,7 +124,7 @@ const SidebarAdmin = () => {
           <span className="font-medium text-sm">Se déconnecter</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
 

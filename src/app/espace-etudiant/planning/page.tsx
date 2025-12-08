@@ -23,7 +23,7 @@ export default function PlanningPage() {
       id: '2',
       titre: 'Stage Pédiatrie',
       service: 'Pédiatrie',
-      hopital: 'CHU Blida',
+      hopital: 'Hôpital THENIA',
       dateDebut: '2025-12-01',
       dateFin: '2025-12-31',
       encadrant: 'Dr. Martin',
@@ -33,7 +33,7 @@ export default function PlanningPage() {
       id: '3',
       titre: 'Stage Urgences',
       service: 'Médecine d\'urgence',
-      hopital: 'Hôpital Central',
+      hopital: 'Hôpital BORDJ MENAIL',
       dateDebut: '2026-01-15',
       dateFin: '2026-02-15',
       encadrant: 'Dr. Dubois',
@@ -43,11 +43,21 @@ export default function PlanningPage() {
       id: '4',
       titre: 'Stage Radiologie',
       service: 'Imagerie Médicale',
-      hopital: 'Centre de Radiologie',
+      hopital: 'Hôpital THENIA',
       dateDebut: '2026-03-01',
       dateFin: '2026-03-31',
       encadrant: 'Dr. Lambert',
       color: 'bg-purple-500'
+    },
+    {
+      id: '5',
+      titre: 'Stage gynecologie',
+      service: 'gyneco ',
+      hopital: 'Hôpital DELLYS',
+      dateDebut: '2026-11-01',
+      dateFin: '2026-11-28',
+      encadrant: 'Dr. Lambert',
+      color: 'bg-pink-500'
     }
   ];
 
@@ -69,7 +79,7 @@ export default function PlanningPage() {
       <div className="flex flex-1">
         <SidebarEtudiant />
         
-        <main className="flex-1 p-8 bg-gray-50">
+        <main className="flex-1 ml-6 rounded-2xl p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <PlanningCalendar 
               year={2025}
