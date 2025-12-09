@@ -48,16 +48,6 @@ export default function PlanningPage() {
       dateFin: '2026-03-31',
       encadrant: 'Dr. Lambert',
       color: 'bg-purple-500'
-    },
-    {
-      id: '5',
-      titre: 'Stage gynecologie',
-      service: 'gyneco ',
-      hopital: 'Hôpital DELLYS',
-      dateDebut: '2026-11-01',
-      dateFin: '2026-11-28',
-      encadrant: 'Dr. Lambert',
-      color: 'bg-pink-500'
     }
   ];
 

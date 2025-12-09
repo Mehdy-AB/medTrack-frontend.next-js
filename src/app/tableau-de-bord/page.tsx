@@ -8,7 +8,7 @@ import StatCard from './Components/StatCard';
 import BarChart from './Components/BarChart';
 import DonutChart from './Components/DonutChart';
 import LineChart from './Components/LineChart';
-import { Calendar } from 'lucide-react';
+import { Calendar, Building2, Stethoscope, Users, UserX } from 'lucide-react';
 
 export default function EspaceAdmin() {
   // Données statistiques
@@ -19,6 +19,31 @@ export default function EspaceAdmin() {
     { emoji: '🔬', label: 'Stages actifs', value: '36' },
     { emoji: '🎓', label: 'Stages terminés ce mois-ci', value: '40' },
     { emoji: '⏱️', label: 'Stages en attente de validation', value: '10' }
+  ];
+
+  // NOUVELLES DONNÉES - Étudiants en stage vs sans stage
+  const etudiantsStats = [
+    { emoji: '✅', label: 'Étudiants en stage', value: '756' },
+    { emoji: '❌', label: 'Étudiants sans stage', value: '64' }
+  ];
+
+  // NOUVELLES DONNÉES - Liste des établissements avec services
+  const etablissements = [
+    {
+      nom: 'Hôpital THENIA',
+      services: ['Chirurgie Cardiaque', 'Pédiatrie', 'Urgences', 'Radiologie'],
+      nbEtudiants: 280
+    },
+    {
+      nom: 'CHU DELLES',
+      services: ['Médecine Interne', 'Cardiologie', 'Neurologie', 'Oncologie', 'ORL'],
+      nbEtudiants: 341
+    },
+    {
+      nom: 'Centre Bordj Menail',
+      services: ['Médecine Générale', 'Gynécologie', 'Dermatologie'],
+      nbEtudiants: 199
+    }
   ];
 
   // Données pour les graphiques
@@ -42,6 +67,11 @@ export default function EspaceAdmin() {
     { label: 'Mai', value: 22 },
     { label: 'Juin', value: 29 },
     { label: 'Juillet', value: 38 },
+    { label: 'Août', value: 25 },
+    { label: 'Septembre', value: 33 },
+    { label: 'Octobre', value: 39 },
+    { label: 'Novembre', value: 27 },
+    { label: 'Décembre', value: 30 },
   ];
 
   return (
@@ -52,7 +82,7 @@ export default function EspaceAdmin() {
       <div className="flex flex-1">
         <SidebarAdmin />
         
-        <main className="flex-1 p-8 bg-gray-50">
+        <main className="flex-1 rounded-3xl ml-5 p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             
             {/* Titre principal */}
@@ -67,11 +97,11 @@ export default function EspaceAdmin() {
               </h2>
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="w-5 h-5" />
-                <span>Aujourd'hui : Lundi 20 octobre 2025</span>
+                <span>Aujourd&apos;hui : Lundi 20 octobre 2025</span>
               </div>
             </div>
 
-            {/* Grille de statistiques */}
+            {/* Grille de statistiques principales */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {stats.map((stat, index) => (
                 <StatCard
@@ -81,6 +111,53 @@ export default function EspaceAdmin() {
                   value={stat.value}
                 />
               ))}
+            </div>
+
+            {/* NOUVEAU - Statistiques Étudiants en stage vs sans stage */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {etudiantsStats.map((stat, index) => (
+                <StatCard
+                  key={index}
+                  emoji={stat.emoji}
+                  label={stat.label}
+                  value={stat.value}
+                />
+              ))}
+            </div>
+
+            {/* NOUVEAU - Liste des établissements et services */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <Building2 className="w-6 h-6 text-teal-600" />
+                Liste des établissements et services
+              </h2>
+              
+              <div className="space-y-6">
+                {etablissements.map((etablissement, index) => (
+                  <div key={index} className="border-l-4 border-teal-500 pl-4 py-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        🏥 {etablissement.nom}
+                      </h3>
+                      <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        {etablissement.nbEtudiants} étudiants
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {etablissement.services.map((service, idx) => (
+                        <span 
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-sm"
+                        >
+                          <Stethoscope className="w-3 h-3" />
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Section Visualisations */}

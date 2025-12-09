@@ -1,35 +1,96 @@
+// ============================================
+// app/espace-etudiant/profile/page.tsx
+// ============================================
 "use client";
 
-//import Navbar from '../../Components/Navbar';
+import { useState } from 'react';
 import NavbarEtudiant from '../Components/NavbarEtudiant';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-//import Sidebar from '../../Components/Sidebar';
 import SidebarEtudiant from '../Components/SidebarEtudiant';
-import Profile from '../../Components/Profile';
-import { ProfileData } from '../../../types/profile.types';
-import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Edit2, Upload, FileText, X, Check, Download } from 'lucide-react';
+
+interface Document {
+  id: string;
+  nom: string;
+  type: 'CV' | 'Relevé' | 'Attestation' | 'Autre';
+  dateUpload: string;
+  url: string;
+}
 
 export default function EtudiantProfilePage() {
-  const router = useRouter();
-
-  const studentData: ProfileData = {
-    name: 'Sofia Lahnin',
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: 'Sofia Lahnin',
+    matricule: '22253258862', // Non modifiable
+    year: '3ème année',
+    specialty: 'Médecine générale',
     email: 'sofialohnin@gmail.com',
-    photo: '/img/profil-etudiant.jpg',
-    fields: [
-      { label: 'Nom complet', value: 'Sofia Lahnin', key: 'fullName' },
-      { label: 'Matricule', value: '22253258862', key: 'matricule' },
-      { label: 'Année d\'étude', value: '3ème année', key: 'year' },
-      { label: 'Spécialité', value: 'Médecine générale', key: 'specialty' },
-      { label: 'Email', value: 'sofialohnin@gmail.com', key: 'email' },
-      { label: 'Téléphone', value: '0552986633', key: 'phone' },
-    ]
+    phone: '0552986633',
+  });
+
+  const [documents, setDocuments] = useState<Document[]>([
+    {
+      id: '1',
+      nom: 'CV_Sofia_Lahnin.pdf',
+      type: 'CV',
+      dateUpload: '15/11/2025',
+      url: '/docs/cv.pdf'
+    },
+    {
+      id: '2',
+      nom: 'Releve_Notes_S5.pdf',
+      type: 'Relevé',
+      dateUpload: '10/11/2025',
+      url: '/docs/releve.pdf'
+    }
+  ]);
+
+  const handleSave = () => {
+    // TODO: Appel API pour sauvegarder les modifications
+    console.log('Données sauvegardées:', formData);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    // Réinitialiser aux valeurs d'origine
+    setFormData({
+      fullName: 'Sofia Lahnin',
+      matricule: '22253258862',
+      year: '3ème année',
+      specialty: 'Médecine générale',
+      email: 'sofialohnin@gmail.com',
+      phone: '0552986633',
+    });
+    setIsEditing(false);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // TODO: Upload du fichier vers le serveur
+      const newDoc: Document = {
+        id: Date.now().toString(),
+        nom: file.name,
+        type: 'Autre', // À déterminer selon le type de fichier
+        dateUpload: new Date().toLocaleDateString('fr-FR'),
+        url: URL.createObjectURL(file)
+      };
+      setDocuments([...documents, newDoc]);
+    }
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter(doc => doc.id !== id));
+  };
+
+  const getDocumentIcon = (type: string) => {
+    return <FileText className="text-teal-500" size={20} />;
   };
 
   const handleLogout = () => {
     console.log('Déconnexion étudiant...');
-    // router.push('/');
   };
 
   return (
@@ -39,7 +100,246 @@ export default function EtudiantProfilePage() {
       
       <div className="flex flex-1">
         <SidebarEtudiant />
-        <Profile data={studentData} onLogout={handleLogout} />
+        
+        <div className="flex-1 ml-6 rounded-2xl p-6 bg-gray-50">
+          <div className="max-w-4xl mx-auto space-y-6">
+            
+            {/* Section Informations Personnelles */}
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h1 className="text-2xl font-semibold text-gray-900">Mon Profil</h1>
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                  >
+                    <Edit2 size={18} />
+                    Modifier
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancel}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      <X size={18} />
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                    >
+                      <Check size={18} />
+                      Sauvegarder
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Photo et infos de base */}
+              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-200">
+                <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <Image 
+                    src="/img/profil-etudiant.jpg" 
+                    alt="Sofia Lahnin"
+                    width={80}
+                    height={80}
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">{formData.fullName}</h2>
+                  <p className="text-sm text-gray-500">{formData.email}</p>
+                </div>
+              </div>
+
+              {/* Champs du formulaire - DISPOSITION VERTICALE */}
+              <div className="space-y-6">
+                {/* Nom complet */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Nom complet
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {formData.fullName}
+                    </div>
+                  )}
+                </div>
+
+                {/* Matricule (non modifiable) */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Matricule
+                  </label>
+                  <div className="text-base text-gray-800 py-3 px-4 bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed">
+                    {formData.matricule}
+                  </div>
+                </div>
+
+                {/* Année d'étude */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Année d&apos;étude
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {formData.year}
+                    </div>
+                  )}
+                </div>
+
+                {/* Spécialité */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Spécialité
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.specialty}
+                      onChange={(e) => setFormData({...formData, specialty: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {formData.specialty}
+                    </div>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Email
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {formData.email}
+                    </div>
+                  )}
+                </div>
+
+                {/* Téléphone */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Téléphone
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {formData.phone}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section Documents */}
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Pièces justificatives</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Relevés de notes, attestations, CV, etc.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors cursor-pointer">
+                  <Upload size={18} />
+                  Ajouter un document
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                </label>
+              </div>
+
+              {/* Liste des documents */}
+              {documents.length > 0 ? (
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {getDocumentIcon(doc.type)}
+                        <div>
+                          <p className="font-medium text-gray-900">{doc.nom}</p>
+                          <p className="text-sm text-gray-500">
+                            {doc.type} • Ajouté le {doc.dateUpload}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => window.open(doc.url, '_blank')}
+                          className="p-2 text-teal-500 hover:bg-teal-50 rounded-lg transition-colors"
+                          title="Télécharger"
+                        >
+                          <Download size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Supprimer"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <FileText size={48} className="mx-auto mb-4 text-gray-400" />
+                  <p>Aucun document ajouté</p>
+                  <p className="text-sm mt-1">Cliquez sur &ldquo;Ajouter un document&ldquo; pour commencer</p>
+                </div>
+              )}
+            </div>
+
+            {/* Bouton Déconnexion */}
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <button
+                onClick={handleLogout}
+                className="bg-teal-500 hover:bg-teal-600 text-white font-medium py-3 px-8 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+              >
+                Se déconnecter
+              </button>
+            </div>
+
+          </div>
+        </div>
       </div>
       
       <Footer />

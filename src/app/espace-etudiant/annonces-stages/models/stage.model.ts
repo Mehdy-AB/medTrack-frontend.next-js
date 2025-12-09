@@ -2,25 +2,26 @@ export interface AnnonceStage {
   id: string;
   titre: string;
   hopital: string;
-  service: string;
+  service: string; // Service concerné
   specialite: string;
   dateDebut: string;
   dateFin: string;
-  duree: string; // Ex: "1 mois"
-  description: string;
+  duree: string; // Durée
+  description: string; // Description
   prerequis: string[];
-  nombrePlaces: number;
+  nombrePlaces: number; // Nombre de places
   placesRestantes: number;
   datePublication: string;
   dateLimite: string;
   statut: 'Ouvert' | 'Fermé' | 'Bientôt';
+  // Pas besoin de postulants ici, on gère ça côté backend
 }
 
 export const mockAnnoncesStages: AnnonceStage[] = [
   {
     id: 'stage-1',
     titre: 'Stage en Chirurgie Cardiaque',
-    hopital: 'CHU Mustapha Pacha',
+    hopital: 'Hôpital THENIA',
     service: 'Chirurgie Cardiaque',
     specialite: 'Chirurgie',
     dateDebut: '01/12/2025',
@@ -54,7 +55,7 @@ export const mockAnnoncesStages: AnnonceStage[] = [
   {
     id: 'stage-3',
     titre: 'Stage aux Urgences',
-    hopital: 'BORDJ MENAL',
+    hopital: 'Hôpital BORDJ MENAIL',
     service: 'Médecine d\'Urgence',
     specialite: 'Urgences',
     dateDebut: '01/01/2026',
@@ -71,7 +72,7 @@ export const mockAnnoncesStages: AnnonceStage[] = [
   {
     id: 'stage-4',
     titre: 'Stage en Médecine Interne',
-    hopital: 'Hôpital Parnet',
+    hopital: 'Hôpital BORDJ MENAIL',
     service: 'Médecine Interne',
     specialite: 'Médecine Interne',
     dateDebut: '01/03/2026',
@@ -86,3 +87,11 @@ export const mockAnnoncesStages: AnnonceStage[] = [
     statut: 'Bientôt'
   }
 ];
+
+// Interface simplifiée pour les postulations
+export interface Postulation {
+  id: string;
+  stageId: string;
+  etudiantId: string;
+  datePostulation: string;
+}

@@ -51,16 +51,16 @@ const SidebarAdmin = () => {
       href: '/tableau-de-bord/gestion-admins' 
     },
     { 
-      id: 'gestion-stages', 
-      label: 'Gestion Stages', 
-      icon: <BookOpen size={20} />, 
-      href: '/tableau-de-bord/gestion-stages' 
-    },
-    { 
       id: 'gestion-hopitaux', 
       label: 'Gestion Hôpitaux', 
       icon: <Hospital size={20} />, 
       href: '/tableau-de-bord/gestion-hopitaux' 
+    },
+    { 
+      id: 'gestion-stages', 
+      label: 'Gestion Stages', 
+      icon: <BookOpen size={20} />, 
+      href: '/tableau-de-bord/gestion-stages' 
     },
     { 
       id: 'rapports-statistiques', 

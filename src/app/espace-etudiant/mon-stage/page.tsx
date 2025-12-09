@@ -16,11 +16,11 @@ export default function MonStagePage() {
       <NavbarEtudiant />
       <Header spaceName="Espace Étudiant" notificationCount={2} />
       
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex flex-1 ">
         <SidebarEtudiant />
         
         {/* Contenu principal */}
-        <main className="flex-1  bg-gray-50">
+        <main className="flex-1 ml-6 rounded-2xl  bg-gray-50">
           <div className="max-w-7xl mx-auto p-8">
             
             {/* En-tête avec carte de bienvenue */}
