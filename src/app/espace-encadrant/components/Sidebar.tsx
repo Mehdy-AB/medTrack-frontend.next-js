@@ -10,7 +10,10 @@ import {
   FileText,
   User,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  LayoutDashboard,
+  FileCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +23,7 @@ interface SidebarItem {
   label: string;
   icon: React.ReactNode;
   href: string;
+  isLogout?: boolean;
 }
 
 const SidebarEncadrant = () => {
@@ -39,28 +43,22 @@ const SidebarEncadrant = () => {
       href: '/espace-encadrant/Liste-Etudiants' 
     },
     { 
-      id: 'stage-actuel', 
+      id: 'PageStageActuel', 
       label: 'Stage actuel', 
       icon: <BookOpen size={20} />, 
-      href: '/espace-encadrant/stage-actuel' 
+      href: '/espace-encadrant/PageStageActuel' 
     },
     { 
-      id: 'evaluations', 
+      id: 'EvaluationsPage', 
       label: 'Évaluations', 
       icon: <ClipboardList size={20} />, 
-      href: '/espace-encadrant/evaluations' 
+      href: '/espace-encadrant/PageEvaluations' 
     },
     { 
-      id: 'presences', 
+      id: 'PagePresences', 
       label: 'Présences', 
       icon: <Clock size={20} />, 
-      href: '/espace-encadrant/presences' 
-    },
-    { 
-      id: 'messagerie', 
-      label: 'Messagerie', 
-      icon: <MessageSquare size={20} />, 
-      href: '/espace-encadrant/messagerie' 
+      href: '/espace-encadrant/PagePresences' 
     },
     { 
       id: 'rapport', 
@@ -69,54 +67,104 @@ const SidebarEncadrant = () => {
       href: '/espace-encadrant/rapport' 
     },
     { 
+      id: 'messagerie', 
+      label: 'Messagerie', 
+      icon: <MessageSquare size={20} />, 
+      href: '/espace-encadrant/messagerie' 
+    },
+    { 
+      id: 'PagePlanning', 
+      label: 'Planning', 
+      icon: <Calendar size={20} />, 
+      href: '/espace-encadrant/PagePlanning' 
+    },
+    { 
+      id: 'vue-globale', 
+      label: 'Vue Globale du Service', 
+      icon: <LayoutDashboard size={20} />, 
+      href: '/espace-encadrant/vue-globale' 
+    },
+    { 
+      id: 'PageCandidatures', 
+      label: 'Gestion des Candidatures', 
+      icon: <FileCheck size={20} />, 
+      href: '/espace-encadrant/PageCandidatures' 
+    },
+    { 
       id: 'profil', 
       label: 'Profil', 
       icon: <User size={20} />, 
       href: '/espace-encadrant/profile' 
+    },
+    { 
+      id: 'logout', 
+      label: 'Se déconnecter', 
+      icon: <LogOut size={20} />, 
+      href: '/logout',
+      isLogout: true
     }
   ];
 
   const isActive = (href: string) => pathname === href;
 
-  return (
-    <aside className="w-65 shrink-0 ml-6 bg-[#EBEBEB]/30 rounded-2xl h-full flex flex-col">
-      {/* Navigation principale */}
-      <nav className="flex-1 p-6 overflow-y-auto">
-        <div className="space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive(item.href)
-                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
-                  : 'text-gray-600 hover:bg-white hover:text-teal-600 hover:shadow-md border border-transparent hover:border-gray-200'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`${
-                  isActive(item.href) 
-                    ? 'text-white' 
-                    : 'text-gray-400 group-hover:text-teal-500'
-                }`}>
-                  {item.icon}
-                </div>
-                <span className="font-medium text-sm">{item.label}</span>
-              </div>
-              {isActive(item.href) && (
-                <ChevronRight size={16} className="text-white" />
-              )}
-            </Link>
-          ))}
-        </div>
-      </nav>
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // TODO: Logique de déconnexion
+    console.log('Déconnexion...');
+    // Rediriger vers la page de connexion
+    window.location.href = '/login';
+  };
 
-      {/* Section Déconnexion */}
-      <div className="p-6 border-t border-gray-100">
-        <button className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 w-full transition-all duration-200 group border border-transparent hover:border-red-200">
-          <LogOut size={20} className="text-gray-400 group-hover:text-red-500" />
-          <span className="font-medium text-sm">Se déconnecter</span>
-        </button>
+  return (
+    <aside className="w-64 shrink-0 ml-6 mr-4">
+      <div className="bg-[#EBEBEB]/30 rounded-2xl p-6">
+        {/* Navigation principale */}
+        <nav className="space-y-1">
+          {menuItems.map((item) => {
+            if (item.isLogout) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group text-gray-600 hover:bg-red-50 hover:text-red-600 hover:shadow-md border border-transparent hover:border-red-200"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-gray-400 group-hover:text-red-500">
+                      {item.icon}
+                    </div>
+                    <span className="font-medium text-sm">{item.label}</span>
+                  </div>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                  isActive(item.href)
+                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
+                    : 'text-gray-600 hover:bg-white hover:text-teal-600 hover:shadow-md border border-transparent hover:border-gray-200'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`${
+                    isActive(item.href) 
+                      ? 'text-white' 
+                      : 'text-gray-400 group-hover:text-teal-500'
+                  }`}>
+                    {item.icon}
+                  </div>
+                  <span className="font-medium text-sm">{item.label}</span>
+                </div>
+                {isActive(item.href) && (
+                  <ChevronRight size={16} className="text-white" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </aside>
   );
