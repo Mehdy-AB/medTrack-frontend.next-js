@@ -2,7 +2,8 @@ import React from 'react';
 
 export default function Hero() {
   return (
-    <section className="bg-white -mt-42 pb-8 px-4">
+<section className="bg-white mt-0 pb-8 px-4">
+  
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
           
