@@ -61,7 +61,7 @@ const SidebarEtablissement = () => {
       id: 'liste-etudiants', 
       label: 'Liste des Étudiants', 
       icon: <Users size={20} />, 
-      href: '/espace-etablissement/etudiants',
+      href: '/espace-etablissement/Liste-Etudiants',
       badge: 0
     },
     { 
