@@ -93,6 +93,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/espace-etablissement" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
+                  Espace Établissement
+                </Link>
+              </li>
+              <li>
                 <Link href="/tableau-de-bord" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
                   Tableau De Bord
                 </Link>

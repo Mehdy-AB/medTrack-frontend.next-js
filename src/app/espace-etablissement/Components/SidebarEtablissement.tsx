@@ -54,7 +54,7 @@ const SidebarEtablissement = () => {
       id: 'candidatures', 
       label: 'Gestion Candidatures', 
       icon: <FileCheck size={20} />, 
-      href: '/espace-etablissement/candidatures',
+      href: '/espace-etablissement/gestion-candidatures',
       badge: 12
     },
     { 
@@ -68,7 +68,7 @@ const SidebarEtablissement = () => {
       id: 'statistiques', 
       label: 'Statistiques & Rapports', 
       icon: <BarChart3 size={20} />, 
-      href: '/espace-etablissement/statistiques'
+      href: '/espace-etablissement/statistiques-rapports'
     },
     { 
       id: 'messagerie', 

@@ -537,7 +537,7 @@ export default function PageGestionAnnonces() {
             {/* Barre de recherche et filtres */}
             <div className="mb-6">
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 md:flex-[1] lg:flex-[1]1">
+                <div className="flex-1 md:flex-1 lg:flex-[1]1">
                   <SearchBarAnnonces onSearch={setSearchTerm} />
                 </div>
                 <div className="w-full md:w-auto md:flex-1">
