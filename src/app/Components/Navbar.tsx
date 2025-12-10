@@ -29,7 +29,7 @@ const Navbar = () => {
 
           <div className="flex items-center space-x-8">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/img/logo.png" alt="MedTrack Logo" className="h-12 w-12" />
+              <img src="/img/logo.png" alt="MedTrack Logo" className="h-30 w-30" />
             </Link>
 
             <div className="hidden md:flex items-center space-x-1">

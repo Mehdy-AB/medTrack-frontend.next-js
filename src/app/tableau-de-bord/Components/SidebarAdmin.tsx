@@ -79,6 +79,12 @@ const SidebarAdmin = () => {
       label: 'Profil', 
       icon: <User size={20} />, 
       href: '/tableau-de-bord/profile' 
+    },
+    { 
+      id: 'logout', 
+      label: 'Se deconnecter', 
+      icon: <LogOut size={20} />, 
+      href: '/logout' 
     }
   ];
 
@@ -89,41 +95,42 @@ const SidebarAdmin = () => {
       {/* Navigation principale */}
       <nav className="flex-1 p-6 overflow-y-auto">
         <div className="space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive(item.href)
-                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
-                  : 'text-gray-600 hover:bg-white hover:text-teal-600 hover:shadow-md border border-transparent hover:border-gray-200'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`${
-                  isActive(item.href) 
-                    ? 'text-white' 
-                    : 'text-gray-400 group-hover:text-teal-500'
-                }`}>
-                  {item.icon}
+          {menuItems.map((item) => {
+            // Style spécial pour le bouton de déconnexion
+            const isLogoutItem = item.id === 'logout';
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                  isLogoutItem
+                    ? 'text-gray-600 hover:bg-red-50 hover:text-red-600 hover:shadow-md border border-transparent hover:border-red-200'
+                    : isActive(item.href)
+                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
+                    : 'text-gray-600 hover:bg-white hover:text-teal-600 hover:shadow-md border border-transparent hover:border-gray-200'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`${
+                    isLogoutItem
+                      ? 'text-gray-400 group-hover:text-red-500'
+                      : isActive(item.href) 
+                      ? 'text-white' 
+                      : 'text-gray-400 group-hover:text-teal-500'
+                  }`}>
+                    {item.icon}
+                  </div>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </div>
-                <span className="font-medium text-sm">{item.label}</span>
-              </div>
-              {isActive(item.href) && (
-                <ChevronRight size={16} className="text-white" />
-              )}
-            </Link>
-          ))}
+                {isActive(item.href) && !isLogoutItem && (
+                  <ChevronRight size={16} className="text-white" />
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
-
-      {/* Section Déconnexion */}
-      <div className="p-6 border-t border-gray-100">
-        <button className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 w-full transition-all duration-200 group border border-transparent hover:border-red-200">
-          <LogOut size={20} className="text-gray-400 group-hover:text-red-500" />
-          <span className="font-medium text-sm">Se déconnecter</span>
-        </button>
-      </div>
     </aside>
   );
 };

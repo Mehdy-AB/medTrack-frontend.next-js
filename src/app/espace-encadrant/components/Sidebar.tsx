@@ -25,8 +25,7 @@ interface SidebarItem {
   label: string;
   icon: React.ReactNode;
   href: string;
-  isLogout?: boolean;
-  requiresChefService?: boolean; // Nouveau: accessible seulement au chef de service
+  requiresChefService?: boolean; // Accessible seulement au chef de service
 }
 
 const SidebarEncadrant = () => {
@@ -111,8 +110,7 @@ const SidebarEncadrant = () => {
       id: 'logout', 
       label: 'Se déconnecter', 
       icon: <LogOut size={20} />, 
-      href: '/logout',
-      isLogout: true
+      href: '/logout'
     }
   ];
 
@@ -126,50 +124,32 @@ const SidebarEncadrant = () => {
 
   const isActive = (href: string) => pathname === href;
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // TODO: Logique de déconnexion
-    console.log('Déconnexion...');
-    // Rediriger vers la page de connexion
-    window.location.href = '/login';
-  };
-
   return (
     <aside className="w-64 shrink-0 ml-6 mr-4">
       <div className="bg-[#EBEBEB]/30 rounded-2xl p-6">
         {/* Navigation principale */}
         <nav className="space-y-1">
           {filteredMenuItems.map((item) => {
-            if (item.isLogout) {
-              return (
-                <button
-                  key={item.id}
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group text-gray-600 hover:bg-red-50 hover:text-red-600 hover:shadow-md border border-transparent hover:border-red-200"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="text-gray-400 group-hover:text-red-500">
-                      {item.icon}
-                    </div>
-                    <span className="font-medium text-sm">{item.label}</span>
-                  </div>
-                </button>
-              );
-            }
-
+            // Style spécial pour le bouton de déconnexion
+            const isLogoutItem = item.id === 'logout';
+            
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
-                  isActive(item.href)
+                  isLogoutItem
+                    ? 'text-gray-600 hover:bg-red-50 hover:text-red-600 hover:shadow-md border border-transparent hover:border-red-200'
+                    : isActive(item.href)
                     ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
                     : 'text-gray-600 hover:bg-white hover:text-teal-600 hover:shadow-md border border-transparent hover:border-gray-200'
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   <div className={`${
-                    isActive(item.href) 
+                    isLogoutItem
+                      ? 'text-gray-400 group-hover:text-red-500'
+                      : isActive(item.href) 
                       ? 'text-white' 
                       : 'text-gray-400 group-hover:text-teal-500'
                   }`}>
@@ -177,7 +157,7 @@ const SidebarEncadrant = () => {
                   </div>
                   <span className="font-medium text-sm">{item.label}</span>
                 </div>
-                {isActive(item.href) && (
+                {isActive(item.href) && !isLogoutItem && (
                   <ChevronRight size={16} className="text-white" />
                 )}
               </Link>

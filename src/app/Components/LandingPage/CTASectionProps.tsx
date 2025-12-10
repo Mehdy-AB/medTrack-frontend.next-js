@@ -1,8 +1,12 @@
+import Link from "next/link";
 interface CTASectionProps {
   title: string;
   description: string;
   imagePath: string;
 }
+ const handleLoginClick = () => {
+    router.push('/choose-role');
+  };
 
 const CTASection = ({ title, description, imagePath }: CTASectionProps) => {
   return (
@@ -46,18 +50,20 @@ const CTASection = ({ title, description, imagePath }: CTASectionProps) => {
                   <span className="text-white text-sm">✓</span>
                 </div>
                 <p className="text-gray-700">
-                  Une seule plateforme, des dizaines d'avantages.
+                  Une seule plateforme, des dizaines d&apos;avantages.
                 </p>
               </div>
             </div>
 
             {/* Bouton */}
             <a
-              href="/connexion"
+              onClick={handleLoginClick}
               className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Se connecter
             </a>
+
+             
           </div>
         </div>
       </div>

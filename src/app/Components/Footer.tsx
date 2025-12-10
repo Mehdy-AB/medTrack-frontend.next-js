@@ -71,7 +71,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/se-connecter" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
+                <Link href="/choose-role" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
                   Se Connecter
                 </Link>
               </li>
@@ -89,7 +89,12 @@ const Footer = () => {
               </li>
               <li>
                 <Link href="/espace-encadrant" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
-                  Espace Encadrant
+                  Espace Encadrant 
+                </Link>
+              </li>
+              <li>
+                <Link href="/espace-etablissement" className="text-gray-700 hover:text-teal-700 transition-colors text-sm">
+                  Espace Etablissement
                 </Link>
               </li>
               <li>

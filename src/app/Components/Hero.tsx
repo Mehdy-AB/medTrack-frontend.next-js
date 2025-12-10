@@ -1,9 +1,17 @@
+"use client"; // Ajoutez cette ligne en haut
+
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 export default function Hero() {
+  const router = useRouter();
+
+  const handleLoginClick = () => {
+    router.push('/choose-role');
+  };
+
   return (
-<section className="bg-white mt-0 pb-8 px-4">
-  
+    <section className="bg-white mt-0 pb-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
           
@@ -21,7 +29,10 @@ export default function Hero() {
               Une plateforme intuitive pour connecter étudiants, encadrants et hôpitaux.
             </p>
             
-            <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
+            <button 
+              onClick={handleLoginClick}
+              className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+            >
               Se connecter
             </button>
           </div>
@@ -34,7 +45,6 @@ export default function Hero() {
               className="w-full max-w-lg h-auto object-contain"
             />
           </div>
-          
         </div>
       </div>
     </section>

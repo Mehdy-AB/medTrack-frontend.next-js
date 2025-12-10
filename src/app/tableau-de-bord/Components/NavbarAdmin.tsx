@@ -26,10 +26,10 @@ const NavbarAdmin = () => {
               />   
             </Link>
 
-            {/* Navigation Links */}
+            {/* Navigation Links - CORRIGÉ : <a> → <Link> */}
             <div className="hidden md:flex items-center space-x-1">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.id}
                   href={link.href}
                   onClick={() => setActiveLink(link.id)}
@@ -40,7 +40,7 @@ const NavbarAdmin = () => {
                   }`}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -64,11 +64,11 @@ const NavbarAdmin = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - CORRIGÉ : <a> → <Link> */}
       <div className="md:hidden hidden border-t border-gray-200">
         <div className="px-2 pt-2 pb-3 space-y-1">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.id}
               href={link.href}
               onClick={() => setActiveLink(link.id)}
@@ -79,7 +79,7 @@ const NavbarAdmin = () => {
               }`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
       </div>
