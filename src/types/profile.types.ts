@@ -2,6 +2,7 @@ export interface ProfileField {
   label: string;
   value: string;
   key: string;
+  editable?: boolean; // Add this optional property
 }
 
 export interface ProfileData {

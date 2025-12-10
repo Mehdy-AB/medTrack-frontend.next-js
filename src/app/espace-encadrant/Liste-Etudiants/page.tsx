@@ -1,5 +1,3 @@
-// Encadrant/PageListe/page.tsx
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -86,6 +84,74 @@ export default function ListeEtudiantsPage() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
 
+  // Fonction d'export
+  const handleExport = (format: 'pdf' | 'excel') => {
+    console.log(`Exportation des étudiants en ${format}`, filteredStudents);
+    
+    // Créer le contenu d'export
+    let exportContent = '';
+    let mimeType = 'text/plain';
+    let extension = 'txt';
+    let filename = `etudiants_${new Date().toISOString().split('T')[0]}`;
+    
+    if (format === 'excel') {
+      // Format CSV pour Excel
+      mimeType = 'text/csv';
+      extension = 'csv';
+      
+      // En-tête CSV
+      exportContent = 'Nom,Matricule,Promotion,Spécialité,Stage Actuel,Début,Fin,Statut,Note\n';
+      
+      // Données
+      filteredStudents.forEach(student => {
+        exportContent += `"${student.nom}","${student.matricule}","${student.promotion}","${student.specialite}",`;
+        exportContent += `"${student.stageActuel}","${student.dateDebut}","${student.dateFin}","${student.statut}","${student.note || ''}"\n`;
+      });
+      
+      filename += '.csv';
+    } else {
+      // Format PDF (simulé avec texte formaté)
+      mimeType = 'text/plain';
+      extension = 'txt';
+      
+      exportContent = '=== LISTE DES ÉTUDIANTS ===\n\n';
+      exportContent += `Date d'export: ${new Date().toLocaleDateString('fr-FR')}\n`;
+      exportContent += `Nombre d'étudiants: ${filteredStudents.length}\n\n`;
+      exportContent += '─'.repeat(80) + '\n\n';
+      
+      filteredStudents.forEach((student, index) => {
+        exportContent += `${index + 1}. ${student.nom}\n`;
+        exportContent += `   Matricule: ${student.matricule}\n`;
+        exportContent += `   Promotion: ${student.promotion}\n`;
+        exportContent += `   Spécialité: ${student.specialite}\n`;
+        exportContent += `   Stage: ${student.stageActuel}\n`;
+        exportContent += `   Période: ${student.dateDebut} - ${student.dateFin}\n`;
+        exportContent += `   Statut: ${student.statut}\n`;
+        exportContent += `   Note: ${student.note || 'Non noté'}\n`;
+        exportContent += '\n';
+      });
+      
+      exportContent += '─'.repeat(80) + '\n';
+      exportContent += 'Fin de la liste\n';
+      
+      filename += '.txt';
+    }
+    
+    // Créer et télécharger le fichier
+    const blob = new Blob([exportContent], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Notification
+    alert(`${filteredStudents.length} étudiants exportés en ${format.toUpperCase()} !`);
+  };
+
   // Reset à la page 1 quand on filtre ou recherche
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -94,6 +160,11 @@ export default function ListeEtudiantsPage() {
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchQuery('');
     setCurrentPage(1);
   };
 
@@ -135,9 +206,13 @@ export default function ListeEtudiantsPage() {
               </div>
             </div>
 
-            {/* Filtres */}
+            {/* Filtres avec bouton d'export */}
             <div className="mb-6">
-              <FilterListe onFilterChange={handleFilterChange} />
+              <FilterListe 
+                onFilterChange={handleFilterChange}
+                onReset={handleReset}
+                onExport={handleExport}
+              />
             </div>
 
             {/* Tableau */}

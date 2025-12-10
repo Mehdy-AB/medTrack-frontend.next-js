@@ -1,3 +1,5 @@
+// src/app/espace-encadrant/components/Sidebar.tsx
+
 "use client";
 
 import { 
@@ -24,10 +26,16 @@ interface SidebarItem {
   icon: React.ReactNode;
   href: string;
   isLogout?: boolean;
+  requiresChefService?: boolean; // Nouveau: accessible seulement au chef de service
 }
 
 const SidebarEncadrant = () => {
   const pathname = usePathname();
+
+  // TODO: Récupérer le rôle depuis l'authentification/context
+  // Pour l'instant, vous pouvez le remplacer par votre logique d'auth
+  const userRole = 'Chef de Service'; // ou 'Médecin'
+  const isChefService = userRole === 'Chef de Service';
 
   const menuItems: SidebarItem[] = [
     { 
@@ -64,7 +72,7 @@ const SidebarEncadrant = () => {
       id: 'rapport', 
       label: 'Rapport', 
       icon: <FileText size={20} />, 
-      href: '/espace-encadrant/rapport' 
+      href: '/espace-encadrant/PageRapports' 
     },
     { 
       id: 'messagerie', 
@@ -78,17 +86,20 @@ const SidebarEncadrant = () => {
       icon: <Calendar size={20} />, 
       href: '/espace-encadrant/PagePlanning' 
     },
+    // Pages visibles uniquement pour Chef de Service
     { 
-      id: 'vue-globale', 
+      id: 'PageVueGlobal', 
       label: 'Vue Globale du Service', 
       icon: <LayoutDashboard size={20} />, 
-      href: '/espace-encadrant/vue-globale' 
+      href: '/espace-encadrant/PageVueGlobale',
+      requiresChefService: true
     },
     { 
       id: 'PageCandidatures', 
       label: 'Gestion des Candidatures', 
       icon: <FileCheck size={20} />, 
-      href: '/espace-encadrant/PageCandidatures' 
+      href: '/espace-encadrant/PageCandidatures',
+      requiresChefService: true
     },
     { 
       id: 'profil', 
@@ -105,6 +116,14 @@ const SidebarEncadrant = () => {
     }
   ];
 
+  // Filtrer les items selon le rôle
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.requiresChefService) {
+      return isChefService;
+    }
+    return true;
+  });
+
   const isActive = (href: string) => pathname === href;
 
   const handleLogout = (e: React.MouseEvent) => {
@@ -120,7 +139,7 @@ const SidebarEncadrant = () => {
       <div className="bg-[#EBEBEB]/30 rounded-2xl p-6">
         {/* Navigation principale */}
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             if (item.isLogout) {
               return (
                 <button

@@ -1,33 +1,37 @@
 "use client";
 
 import { useState } from 'react';
-import { ChevronDown, Filter as FilterIcon, Download, RefreshCw } from 'lucide-react';
+import { ChevronDown, Filter as FilterIcon, Download, FileText, RefreshCw } from 'lucide-react';
 
-interface FilterListeProps {
+interface FilterRapportsProps {
   onFilterChange: (filters: FilterState) => void;
-  onReset: () => void;
   onExport: (format: 'pdf' | 'excel') => void;
+  onGenerate: () => void;
+  onReset: () => void;
 }
 
 export interface FilterState {
-  promotion: string;
-  specialite: string;
+  typeRapport: string;
   statut: string;
+  periode: string;
+  stage: string;
 }
 
-const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) => {
+const FilterRapports = ({ onFilterChange, onExport, onGenerate, onReset }: FilterRapportsProps) => {
   const [filters, setFilters] = useState<FilterState>({
-    promotion: '',
-    specialite: '',
-    statut: ''
+    typeRapport: '',
+    statut: '',
+    periode: '',
+    stage: ''
   });
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const promotions = ['2023-2024', '2024-2025', '2025-2026', '2026-2027'];
-  const specialites = ['Chirurgie', 'Médecine Générale', 'Pédiatrie', 'Cardiologie', 'Urgences', 'Neurochirurgie', 'Orthopédie'];
-  const statuts = ['En cours', 'Terminé', 'À venir'];
+  const typesRapport = ['Présence', 'Évaluation', 'Attestation', 'Activité'];
+  const statuts = ['Complet', 'Incomplet', 'En attente'];
+  const periodes = ['< 1 mois', '1-3 mois', '3-6 mois', '> 6 mois'];
+  const stages = ['Chirurgie Cardiaque', 'Pédiatrie', 'Cardiologie', 'Urgences', 'Neurochirurgie'];
 
   const handleFilterSelect = (filterType: keyof FilterState, value: string) => {
     const newFilters = { ...filters, [filterType]: value };
@@ -40,8 +44,8 @@ const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) =>
     setOpenDropdown(openDropdown === filterType ? null : filterType);
   };
 
-  const handleResetFilters = () => {
-    const resetFilters = { promotion: '', specialite: '', statut: '' };
+  const handleReset = () => {
+    const resetFilters = { typeRapport: '', statut: '', periode: '', stage: '' };
     setFilters(resetFilters);
     onFilterChange(resetFilters);
     onReset();
@@ -53,62 +57,31 @@ const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) =>
       <div className="flex flex-wrap gap-3 items-center">
         <FilterIcon className="w-5 h-5 text-gray-500" />
         
-        {/* Filtre Promotion */}
+        {/* Filtre Type de rapport */}
         <div className="relative">
           <button
-            onClick={() => toggleDropdown('promotion')}
+            onClick={() => toggleDropdown('typeRapport')}
             className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            {filters.promotion || 'Promotion'}
+            {filters.typeRapport || 'Type de rapport'}
             <ChevronDown className="w-4 h-4" />
           </button>
           
-          {openDropdown === 'promotion' && (
-            <div className="absolute top-full mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 max-h-60 overflow-y-auto">
+          {openDropdown === 'typeRapport' && (
+            <div className="absolute top-full mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
               <button
-                onClick={() => handleFilterSelect('promotion', '')}
+                onClick={() => handleFilterSelect('typeRapport', '')}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Toutes
+                Tous
               </button>
-              {promotions.map((promotion) => (
+              {typesRapport.map((type) => (
                 <button
-                  key={promotion}
-                  onClick={() => handleFilterSelect('promotion', promotion)}
+                  key={type}
+                  onClick={() => handleFilterSelect('typeRapport', type)}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  {promotion}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Filtre Spécialité */}
-        <div className="relative">
-          <button
-            onClick={() => toggleDropdown('specialite')}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-          >
-            {filters.specialite || 'Spécialité'}
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          
-          {openDropdown === 'specialite' && (
-            <div className="absolute top-full mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 max-h-60 overflow-y-auto">
-              <button
-                onClick={() => handleFilterSelect('specialite', '')}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Toutes
-              </button>
-              {specialites.map((specialite) => (
-                <button
-                  key={specialite}
-                  onClick={() => handleFilterSelect('specialite', specialite)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  {specialite}
+                  {type}
                 </button>
               ))}
             </div>
@@ -145,10 +118,50 @@ const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) =>
             </div>
           )}
         </div>
+
+        {/* Filtre Période */}
+        <div className="relative">
+          <button
+            onClick={() => toggleDropdown('periode')}
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+          >
+            {filters.periode || 'Période'}
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          
+          {openDropdown === 'periode' && (
+            <div className="absolute top-full mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+              <button
+                onClick={() => handleFilterSelect('periode', '')}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Toutes
+              </button>
+              {periodes.map((periode) => (
+                <button
+                  key={periode}
+                  onClick={() => handleFilterSelect('periode', periode)}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  {periode}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Boutons Export et Reset à droite */}
+      {/* Boutons à droite */}
       <div className="flex gap-3 items-center">
+        {/* Bouton Générer */}
+        <button
+          onClick={onGenerate}
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+        >
+          <FileText className="w-4 h-4" />
+          Générer un rapport
+        </button>
+
         {/* Bouton Export - Menu au survol */}
         <div 
           className="relative"
@@ -156,26 +169,24 @@ const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) =>
           onMouseLeave={() => setShowExportMenu(false)}
         >
           <button
-            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Exporter (PDF / Excel)
+            Exporter
           </button>
           
           {showExportMenu && (
-            <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+            <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
               <button
                 onClick={() => onExport('pdf')}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <Download className="w-4 h-4" />
                 Exporter en PDF
               </button>
               <button
                 onClick={() => onExport('excel')}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <Download className="w-4 h-4" />
                 Exporter en Excel
               </button>
             </div>
@@ -184,15 +195,15 @@ const FilterListe = ({ onFilterChange, onReset, onExport }: FilterListeProps) =>
 
         {/* Bouton Réinitialiser */}
         <button
-          onClick={handleResetFilters}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors flex items-center gap-2"
+          onClick={handleReset}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
-          Réinitialiser les filtres
+          Réinitialiser
         </button>
       </div>
     </div>
   );
 };
 
-export default FilterListe;
+export default FilterRapports;
