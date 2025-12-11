@@ -159,7 +159,7 @@ const Profile: React.FC<ProfileProps> = ({
           <p className="text-sm text-blue-700">
             <strong>Note :</strong> Seuls les champs Téléphone et Email sont modifiables. 
             Toutes les autres informations (Rôle, Matricule, Spécialité, Service, Hôpital) 
-            sont définies par l'administration et ne peuvent pas être modifiées ici.
+            sont définies par l&apos;administration et ne peuvent pas être modifiées ici.
           </p>
         </div>
 

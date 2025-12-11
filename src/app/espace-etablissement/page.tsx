@@ -113,7 +113,7 @@ export default function TableauBordEtablissementPage() {
                 Tableau de Bord Établissement
               </h1>
               <p className="text-gray-600">
-                Vision stratégique complète de l'activité de formation
+                Vision stratégique complète de l&apos;activité de formation
               </p>
               
               {/* Indicateurs urgents */}

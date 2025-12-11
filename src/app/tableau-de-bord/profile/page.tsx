@@ -14,11 +14,11 @@ export default function AdminProfilePage() {
   const router = useRouter();
 
   const adminData: ProfileData = {
-    name: 'Mohammed Kaddour',
+    name: 'Mohammed Rahmoune', 
     email: 'admin@university.dz',
-    photo: '/img/profil-administrateur.jpg',
+    photo: '/img/profil-administrateur.jpg', 
     fields: [
-      { label: 'Nom complet', value: 'Mohammed Kaddour', key: 'fullName' },
+      { label: 'Nom complet', value: 'Mohammed Rahmoune', key: 'fullName' },
       { label: 'Matricule', value: 'ADM123456', key: 'matricule' },
       { label: 'Fonction', value: 'Administrateur système', key: 'function' },
       { label: 'Département', value: 'Administration', key: 'department' },

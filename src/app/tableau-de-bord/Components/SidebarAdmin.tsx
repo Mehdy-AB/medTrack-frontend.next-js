@@ -45,34 +45,10 @@ const SidebarAdmin = () => {
       href: '/tableau-de-bord/gestion-encadrants' 
     },
     { 
-      id: 'gestion-admins', 
-      label: 'Gestion Admins', 
-      icon: <UserCheck size={20} />, 
-      href: '/tableau-de-bord/gestion-admins' 
-    },
-    { 
       id: 'gestion-hopitaux', 
       label: 'Gestion Hôpitaux', 
       icon: <Hospital size={20} />, 
       href: '/tableau-de-bord/gestion-hopitaux' 
-    },
-    { 
-      id: 'gestion-stages', 
-      label: 'Gestion Stages', 
-      icon: <BookOpen size={20} />, 
-      href: '/tableau-de-bord/gestion-stages' 
-    },
-    { 
-      id: 'rapports-statistiques', 
-      label: 'Rapports & Statistiques', 
-      icon: <BarChart3 size={20} />, 
-      href: '/tableau-de-bord/rapports-statistiques' 
-    },
-    { 
-      id: 'maintenance-parametres', 
-      label: 'Maintenance/Paramètres', 
-      icon: <Wrench size={20} />, 
-      href: '/tableau-de-bord/maintenance-parametres' 
     },
     { 
       id: 'profil', 
