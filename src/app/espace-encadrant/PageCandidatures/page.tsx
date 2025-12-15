@@ -1,393 +1,394 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import NavbarEncadrant from '../components/Navbar';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
 import SidebarEncadrant from '../components/Sidebar';
 import MiniCard from '../../Components/Cards/MiniCard';
-import SearchBarCandidatures from './components/SearchBarCandidatures';
-import FilterCandidatures, { FilterState } from './components/FilterCandidatures';
-import TableCandidatures from './components/TableCandidatures';
-import PaginationCandidatures from './components/PaginationCandidatures';
+import SearchInput from '../../Components/SearchInput';
+import { FilterDropdown, FilterBar } from '../../Components/FilterDropdown';
+import DataTable, { Column } from '../../Components/DataTable';
+import Pagination from '../../Components/Pagination';
+import { RefreshCw, CheckCircle, XCircle, Eye, Clock } from 'lucide-react';
+import { coreApi } from '@/services';
+import { usePagination, useFilters } from '@/hooks';
+import type { Application } from '@/types/api.types';
 import CandidatureModal from './components/CandidatureModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import HistoriqueCandidatures from './components/HistoriqueCandidatures';
-import { 
-  mockCandidatures, 
-  mockMedecins, 
-  mockHistorique, 
-  Candidature 
-} from './models/candidature.model';
 
-const ITEMS_PER_PAGE = 10;
+interface ApplicationFilters {
+  status: string;
+}
 
 export default function CandidaturesPage() {
-  const [candidatures, setCandidatures] = useState<Candidature[]>(mockCandidatures);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<FilterState>({
-    statut: '',
-    specialite: '',
-    anciennete: '',
-    universite: ''
+  // State
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
+  const [actionReason, setActionReason] = useState('');
+
+  // Hooks
+  const pagination = usePagination(10);
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<ApplicationFilters>({
+    status: '',
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCandidature, setSelectedCandidature] = useState<Candidature | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showCandidatureModal, setShowCandidatureModal] = useState(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [confirmationType, setConfirmationType] = useState<'accept' | 'reject' | 'mass'>('accept');
-  const [pendingAction, setPendingAction] = useState<{
-    type: 'accept' | 'reject';
-    candidature?: Candidature;
-    massIds?: string[];
-  } | null>(null);
 
-  // Fonction de filtrage et recherche
-  const filteredCandidatures = useMemo(() => {
-    let result = candidatures.filter(c => c.statut === 'en_attente');
+  // Fetch applications
+  const fetchApplications = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-    // Recherche
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((candidature) => {
-        return (
-          candidature.nom.toLowerCase().includes(query) ||
-          candidature.matricule.toLowerCase().includes(query) ||
-          candidature.specialite.toLowerCase().includes(query) ||
-          candidature.universite.toLowerCase().includes(query)
-        );
-      });
-    }
+    try {
+      const params = {
+        ...toQueryParams(),
+        page: pagination.page,
+        limit: pagination.perPage,
+      };
 
-    // Filtres
-    if (filters.statut === 'Prioritaires') {
-      result = result.filter(c => c.prioritaire);
-    }
-    
-    if (filters.specialite) {
-      result = result.filter(c => c.specialite === filters.specialite);
-    }
-    
-    if (filters.anciennete) {
-      switch(filters.anciennete) {
-        case '< 3 jours':
-          result = result.filter(c => c.anciennete < 3);
-          break;
-        case '3-7 jours':
-          result = result.filter(c => c.anciennete >= 3 && c.anciennete <= 7);
-          break;
-        case '> 7 jours':
-          result = result.filter(c => c.anciennete > 7);
-          break;
+      const response = await coreApi.listApplications(params);
+      const data = response.data;
+
+      if (Array.isArray(data)) {
+        setApplications(data);
+        pagination.setTotal(data.length);
+      } else if (data && 'data' in data) {
+        setApplications(data.data || []);
+        pagination.setTotal(data.total || 0);
+      } else {
+        setApplications([]);
+        pagination.setTotal(0);
       }
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+      setError('Erreur lors du chargement des candidatures');
+      setApplications([]);
+    } finally {
+      setLoading(false);
     }
-    
-    if (filters.universite) {
-      result = result.filter(c => c.universite === filters.universite);
-    }
+  }, [pagination.page, pagination.perPage, toQueryParams]);
 
-    return result;
-  }, [candidatures, searchQuery, filters]);
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredCandidatures.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedCandidatures = filteredCandidatures.slice(startIndex, endIndex);
-
-  // Statistiques
+  // Stats
   const stats = useMemo(() => {
-    const enAttente = candidatures.filter(c => c.statut === 'en_attente').length;
-    const acceptees = candidatures.filter(c => c.statut === 'acceptee').length;
-    const refusees = candidatures.filter(c => c.statut === 'refusee').length;
-    const urgentes = candidatures.filter(c => c.prioritaire && c.statut === 'en_attente').length;
-    
-    return { enAttente, acceptees, refusees, urgentes };
-  }, [candidatures]);
+    return {
+      total: applications.length, // Only counted for current page if not handled by backend stats
+      pending: applications.filter(a => a.status === 'pending').length,
+      accepted: applications.filter(a => a.status === 'accepted').length,
+      rejected: applications.filter(a => a.status === 'rejected').length,
+    };
+  }, [applications]);
 
-  // Handlers
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-  };
+  // Actions
+  const handleAction = async () => {
+    if (!selectedApplication || !actionType) return;
 
-  const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-  };
-
-  const handleExport = (format: 'excel' | 'print') => {
-    console.log(`Exporting as ${format}`, filteredCandidatures);
-    alert(`Export en ${format.toUpperCase()} en cours...`);
-  };
-
-  const handleMassAction = (action: 'accept' | 'reject') => {
-    if (selectedIds.length === 0) {
-      alert('Veuillez sélectionner au moins une candidature');
-      return;
-    }
-    
-    setConfirmationType('mass');
-    setPendingAction({ type: action, massIds: selectedIds });
-    setShowConfirmationModal(true);
-  };
-
-  const handleViewCandidature = (candidature: Candidature) => {
-    setSelectedCandidature(candidature);
-    setShowCandidatureModal(true);
-  };
-
-  const handleAcceptCandidature = (candidature: Candidature) => {
-    setSelectedCandidature(candidature);
-    setConfirmationType('accept');
-    setPendingAction({ type: 'accept', candidature });
-    setShowConfirmationModal(true);
-  };
-
-  const handleRejectCandidature = (candidature: Candidature) => {
-    setSelectedCandidature(candidature);
-    setConfirmationType('reject');
-    setPendingAction({ type: 'reject', candidature });
-    setShowConfirmationModal(true);
-  };
-
-  const handleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(paginatedCandidatures.map(c => c.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const executeAccept = (candidatureId: string, medecinId: string, message?: string) => {
-    const medecin = mockMedecins.find(m => m.id === medecinId);
-    
-    setCandidatures(prev => prev.map(c => 
-      c.id === candidatureId 
-        ? { 
-            ...c, 
-            statut: 'acceptee',
-            medecinAffecte: medecin?.nom,
-            emailEnvoye: true
-          }
-        : c
-    ));
-
-    // TODO: Appel API backend
-    console.log('API: Accept candidature', {
-      candidatureId,
-      medecinId,
-      message
-    });
-
-    // Notification et email
-    alert('Candidature acceptée avec succès. Email envoyé à l\'étudiant.');
-  };
-
-  const executeReject = (candidatureId: string, motif: string, envoyerEmail: boolean, message?: string) => {
-    setCandidatures(prev => prev.map(c => 
-      c.id === candidatureId 
-        ? { 
-            ...c, 
-            statut: 'refusee',
-            motifRefus: motif,
-            emailEnvoye: envoyerEmail
-          }
-        : c
-    ));
-
-    // TODO: Appel API backend
-    console.log('API: Reject candidature', {
-      candidatureId,
-      motif,
-      envoyerEmail,
-      message
-    });
-
-    if (envoyerEmail) {
-      alert('Candidature refusée avec succès. Email envoyé à l\'étudiant.');
-    } else {
-      alert('Candidature refusée avec succès.');
-    }
-  };
-
-  const handleConfirmation = () => {
-    if (!pendingAction) return;
-
-    if (pendingAction.type === 'accept' && pendingAction.candidature) {
-      // Pour une candidature unique, ouvrir le modal détaillé
-      setSelectedCandidature(pendingAction.candidature);
-      setShowCandidatureModal(true);
-    } else if (pendingAction.type === 'reject' && pendingAction.candidature) {
-      // Pour un refus unique, ouvrir le modal détaillé
-      setSelectedCandidature(pendingAction.candidature);
-      setShowCandidatureModal(true);
-    } else if (pendingAction.type === 'accept' && pendingAction.massIds) {
-      // Traitement en masse d'acceptation
-      pendingAction.massIds.forEach(id => {
-        const randomMedecin = mockMedecins.find(m => m.disponibilite);
-        if (randomMedecin) {
-          executeAccept(id, randomMedecin.id, 'Votre candidature a été acceptée.');
-        }
+    try {
+      await coreApi.updateApplication(selectedApplication.id, {
+        status: actionType === 'accept' ? 'accepted' : 'rejected',
+        rejection_reason: actionReason,
       });
-      setSelectedIds([]);
-      alert(`${pendingAction.massIds.length} candidatures acceptées avec succès.`);
-    } else if (pendingAction.type === 'reject' && pendingAction.massIds) {
-      // Traitement en masse de refus
-      pendingAction.massIds.forEach(id => {
-        executeReject(id, 'Manque de places disponibles dans le service', true, 'Votre candidature a été refusée.');
-      });
-      setSelectedIds([]);
-      alert(`${pendingAction.massIds.length} candidatures refusées avec succès.`);
+      setShowConfirm(false);
+      setShowModal(false);
+      fetchApplications();
+    } catch (err) {
+      console.error('Error updating application:', err);
+      alert('Erreur lors du traitement de la candidature');
     }
-
-    setPendingAction(null);
   };
 
-  const handleAcceptFromModal = (data: { medecinId: string; message?: string }) => {
-    if (!selectedCandidature) return;
-    executeAccept(selectedCandidature.id, data.medecinId, data.message);
-    setShowCandidatureModal(false);
-    setSelectedCandidature(null);
+  const openAction = (app: Application, type: 'accept' | 'reject') => {
+    setSelectedApplication(app);
+    setActionType(type);
+    setActionReason('');
+    setShowConfirm(true);
   };
 
-  const handleRejectFromModal = (data: { motif: string; envoyerEmail: boolean; message?: string }) => {
-    if (!selectedCandidature) return;
-    executeReject(selectedCandidature.id, data.motif, data.envoyerEmail, data.message);
-    setShowCandidatureModal(false);
-    setSelectedCandidature(null);
-  };
+  // Table columns
+  const columns: Column<Application>[] = [
+    {
+      key: 'student',
+      header: 'Étudiant',
+      sortable: true,
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs">
+            {(item.student?.user?.first_name?.[0] || '') + (item.student?.user?.last_name?.[0] || '')}
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">
+              {item.student?.user?.first_name} {item.student?.user?.last_name}
+            </div>
+            <div className="text-xs text-gray-500">{item.student?.student_number}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'offer',
+      header: 'Offre de stage',
+      render: (item) => item.offer?.title || '-'
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (item) => new Date(item.submission_date).toLocaleDateString('fr-FR')
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      render: (item) => {
+        const styles = {
+          pending: 'bg-yellow-100 text-yellow-800',
+          accepted: 'bg-green-100 text-green-800',
+          rejected: 'bg-red-100 text-red-800',
+        };
+        const labels = {
+          pending: 'En attente',
+          accepted: 'Acceptée',
+          rejected: 'Refusée',
+        };
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[item.status]}`}>
+            {labels[item.status]}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '140px',
+      render: (item) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setSelectedApplication(item);
+              setShowModal(true);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg"
+            title="Savoir plus"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+
+          {item.status === 'pending' && (
+            <>
+              <button
+                onClick={() => openAction(item, 'accept')}
+                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"
+                title="Accepter"
+              >
+                <CheckCircle className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => openAction(item, 'reject')}
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                title="Refuser"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      )
+    }
+  ];
 
   return (
     <>
-      < NavbarEncadrant />
+      <NavbarEncadrant />
       <Header spaceName="Espace Chef de Service" notificationCount={3} />
-      
+
       <div className="flex min-h-screen bg-white">
-        <SidebarEncadrant/>
-        
-        {/* Contenu principal */}
+        <SidebarEncadrant />
+
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
-            {/* En-tête avec titre et statistiques */}
+            {/* Header */}
             <div className="mb-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    Gestion des Candidatures
-                  </h1>
-                  <p className="text-gray-600">
-                    Consultez, analysez et traitez les candidatures de stage
-                  </p>
-                </div>
-                
-                {/* MiniCards pour les statistiques */}
-                <div className="flex gap-4">
-                  <MiniCard 
-                    label="En attente"
-                    count={stats.enAttente}
-                  />
-                  <MiniCard 
-                    label="Acceptées"
-                    count={stats.acceptees}
-                  />
-                  <MiniCard 
-                    label="Refusées"
-                    count={stats.refusees}
-                  />
-                  <MiniCard 
-                    label="Urgentes"
-                    count={stats.urgentes}
-                  />
-                </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Gestion des Candidatures
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Consultez, analysez et traitez les candidatures de stage
+              </p>
+
+              {/* Stats Cards */}
+              <div className="flex gap-4 mb-8">
+                <MiniCard label="En attente" count={stats.pending} />
+                <MiniCard label="Acceptées" count={stats.accepted} />
+                <MiniCard label="Refusées" count={stats.rejected} />
               </div>
 
-              {/* Barre de recherche */}
-              <div className="mb-6">
-                <SearchBarCandidatures onSearch={handleSearch} />
+              {/* Search & Refresh */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1 max-w-md">
+                  <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Rechercher une candidature..."
+                  />
+                </div>
+                <button
+                  onClick={fetchApplications}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
 
-            {/* Filtres */}
-            <div className="mb-6">
-              <FilterCandidatures 
-                onFilterChange={handleFilterChange}
-                onExport={handleExport}
-                onMassAction={handleMassAction}
-                onShowHistory={() => setShowHistoryModal(true)}
+            {/* Filters */}
+            <FilterBar onClear={clearAllFilters} hasActiveFilters={hasActiveFilters} className="mb-6">
+              <FilterDropdown
+                label="Statut"
+                value={filters.status}
+                onChange={(v) => setFilter('status', v)}
+                options={[
+                  { label: 'En attente', value: 'pending' },
+                  { label: 'Acceptée', value: 'accepted' },
+                  { label: 'Refusée', value: 'rejected' },
+                ]}
               />
-            </div>
+            </FilterBar>
 
-            {/* Tableau */}
-            <div className="w-full">
-              <TableCandidatures 
-                candidatures={paginatedCandidatures}
-                onView={handleViewCandidature}
-                onAccept={handleAcceptCandidature}
-                onReject={handleRejectCandidature}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                onSelectAll={handleSelectAll}
-              />
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <PaginationCandidatures
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                totalItems={filteredCandidatures.length}
-                itemsPerPage={ITEMS_PER_PAGE}
-              />
-            )}
+            {/* Table */}
+            <DataTable
+              data={applications}
+              columns={columns}
+              keyExtractor={(item) => item.id}
+              loading={loading}
+              error={error}
+              emptyMessage="Aucune candidature trouvée"
+              pagination={{
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total: pagination.total,
+                totalPages: pagination.totalPages,
+                onPageChange: pagination.setPage,
+                onPerPageChange: pagination.setPerPage,
+              }}
+            />
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
-      {/* Modals */}
-      {selectedCandidature && (
-        <CandidatureModal
-          isOpen={showCandidatureModal}
-          onClose={() => {
-            setShowCandidatureModal(false);
-            setSelectedCandidature(null);
-          }}
-          candidature={selectedCandidature}
-          medecins={mockMedecins}
-          onAccept={handleAcceptFromModal}
-          onReject={handleRejectFromModal}
-        />
+      {/* Details Modal */}
+      {showModal && selectedApplication && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-xl font-bold">Détails de la candidature</h3>
+                <p className="text-gray-500">
+                  {selectedApplication.student?.user?.first_name} {selectedApplication.student?.user?.last_name}
+                </p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">×</button>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Motivation</label>
+                <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
+                  {selectedApplication.motivation_letter || 'Aucune lettre de motivation'}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Stage</label>
+                  <p className="text-sm">{selectedApplication.offer?.title}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Date</label>
+                  <p className="text-sm">{new Date(selectedApplication.submission_date).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t pt-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Fermer
+              </button>
+              {selectedApplication.status === 'pending' && (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      openAction(selectedApplication, 'reject');
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    Refuser
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      openAction(selectedApplication, 'accept');
+                    }}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                  >
+                    Accepter
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
-      <ConfirmationModal
-        isOpen={showConfirmationModal}
-        onClose={() => {
-          setShowConfirmationModal(false);
-          setPendingAction(null);
-        }}
-        type={confirmationType}
-        count={confirmationType === 'mass' ? selectedIds.length : 1}
-        onConfirm={handleConfirmation}
-      />
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-lg font-bold mb-2">
+              {actionType === 'accept' ? 'Accepter la candidature ?' : 'Refuser la candidature ?'}
+            </h3>
 
-      <HistoriqueCandidatures
-        isOpen={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        decisions={mockHistorique}
-      />
+            {actionType === 'reject' && (
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Motif du refus</label>
+                <textarea
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                  className="w-full border rounded-lg p-2 text-sm"
+                  placeholder="Veuillez indiquer le motif..."
+                  rows={3}
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleAction}
+                className={`px-4 py-2 text-white rounded-lg ${actionType === 'accept' ? 'bg-teal-600 hover:bg-teal-700' : 'bg-red-600 hover:bg-red-700'
+                  }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

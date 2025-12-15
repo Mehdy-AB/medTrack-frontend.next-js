@@ -1,143 +1,158 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
 import Sidebar from '../components/Sidebar';
 import MiniCard from '../../Components/Cards/MiniCard';
-import SearchBarListe from './components/SearchBarListe';
-import FilterListe, { FilterState } from './components/FilterListe';
-import TableListe from './components/TableListe';
-import PaginationListe from './components/PaginationListe';
-import { mockStudents, Student } from './models/student.model';
+import SearchInput from '../../Components/SearchInput';
+import { FilterDropdown, FilterBar } from '../../Components/FilterDropdown';
+import DataTable, { Column } from '../../Components/DataTable';
+import Pagination from '../../Components/Pagination';
+import { RefreshCw, Download, FileText } from 'lucide-react';
+import { profileApi } from '@/services';
+import { usePagination, useFilters } from '@/hooks';
+import type { StudentWithUser } from '@/types/api.types';
 
-const ITEMS_PER_PAGE = 10;
+interface StudentFilters {
+  promotion: string;
+  specialite: string;
+  statut: string;
+}
 
 export default function ListeEtudiantsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<FilterState>({
+  // State
+  const [students, setStudents] = useState<StudentWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Hooks
+  const pagination = usePagination(10);
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, sort, setSort, toQueryParams } = useFilters<StudentFilters>({
     promotion: '',
     specialite: '',
-    statut: ''
+    statut: '',
   });
-  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fonction de filtrage et recherche
-  const filteredStudents = useMemo(() => {
-    let result = [...mockStudents];
+  // Fetch students
+  const fetchStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-    // Recherche (exacte pour les notes, texte pour le reste, date uniquement si format complet)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    try {
+      const params = {
+        ...toQueryParams(),
+        page: pagination.page,
+        limit: pagination.perPage,
+      };
 
-      // Vérifier si l'utilisateur tape un nombre → recherche EXACTE sur les notes
-      const numericQuery = Number(searchQuery);
-      const isExactNumber = !isNaN(numericQuery) && searchQuery.trim() !== '';
+      const response = await profileApi.listStudents(params);
+      const data = response.data;
 
-      // Vérifier si c'est une date du type JJ/MM/AAAA
-      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-      const isFullDate = dateRegex.test(searchQuery.trim());
-
-      result = result.filter((student) => {
-        // 1) Recherche exacte des notes
-        if (isExactNumber) {
-          return student.note === numericQuery;
-        }
-
-        // 2) Recherche date (format complet seulement)
-        if (isFullDate) {
-          return (
-            student.dateDebut === searchQuery ||
-            student.dateFin === searchQuery
-          );
-        }
-
-        // 3) Recherche textuelle normale
-        return (
-          student.nom.toLowerCase().includes(query) ||
-          student.matricule.toLowerCase().includes(query) ||
-          student.specialite.toLowerCase().includes(query) ||
-          student.statut.toLowerCase().includes(query) ||
-          student.stageActuel.toLowerCase().includes(query)
-        );
-      });
+      if (Array.isArray(data)) {
+        setStudents(data);
+        pagination.setTotal(data.length);
+      } else if (data && 'data' in data) {
+        setStudents(data.data || []);
+        pagination.setTotal(data.total || 0);
+      } else {
+        setStudents([]);
+        pagination.setTotal(0);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError('Erreur lors du chargement des étudiants');
+      setStudents([]);
+    } finally {
+      setLoading(false);
     }
+  }, [pagination.page, pagination.perPage, toQueryParams]);
 
-    // Filtres
-    if (filters.promotion) {
-      result = result.filter((student) => student.promotion === filters.promotion);
-    }
-    if (filters.specialite) {
-      result = result.filter((student) => student.specialite === filters.specialite);
-    }
-    if (filters.statut) {
-      result = result.filter((student) => student.statut === filters.statut);
-    }
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
-    return result;
-  }, [searchQuery, filters]);
+  // Table columns
+  const columns: Column<StudentWithUser>[] = useMemo(() => [
+    {
+      key: 'photo',
+      header: 'Photo',
+      width: '60px',
+      render: (item) => (
+        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+          <span className="text-teal-700 text-sm font-medium">
+            {(item.user?.first_name?.[0] || '') + (item.user?.last_name?.[0] || '')}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Nom',
+      sortable: true,
+      render: (item) => (
+        <div>
+          <p className="font-medium">{item.user?.first_name} {item.user?.last_name}</p>
+          <p className="text-xs text-gray-500">{item.student_number || '-'}</p>
+        </div>
+      )
+    },
+    {
+      key: 'university',
+      header: 'Université',
+      sortable: true,
+      render: (item) => item.university || '-'
+    },
+    {
+      key: 'program',
+      header: 'Programme',
+      sortable: true,
+      render: (item) => item.program || '-'
+    },
+    {
+      key: 'year_level',
+      header: 'Année',
+      sortable: true,
+      render: (item) => item.year_level ? `${item.year_level}ème année` : '-'
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (item) => (
+        <a href={`mailto:${item.user?.email}`} className="text-teal-600 hover:underline text-sm">
+          {item.user?.email || '-'}
+        </a>
+      )
+    },
+  ], []);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
-
-  // Fonction d'export
+  // Export function
   const handleExport = (format: 'pdf' | 'excel') => {
-    console.log(`Exportation des étudiants en ${format}`, filteredStudents);
-    
-    // Créer le contenu d'export
     let exportContent = '';
     let mimeType = 'text/plain';
-    let extension = 'txt';
     let filename = `etudiants_${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'excel') {
-      // Format CSV pour Excel
       mimeType = 'text/csv';
-      extension = 'csv';
-      
-      // En-tête CSV
-      exportContent = 'Nom,Matricule,Promotion,Spécialité,Stage Actuel,Début,Fin,Statut,Note\n';
-      
-      // Données
-      filteredStudents.forEach(student => {
-        exportContent += `"${student.nom}","${student.matricule}","${student.promotion}","${student.specialite}",`;
-        exportContent += `"${student.stageActuel}","${student.dateDebut}","${student.dateFin}","${student.statut}","${student.note || ''}"\n`;
+      exportContent = 'Nom,Prénom,Matricule,Université,Programme,Année,Email\n';
+      students.forEach(s => {
+        exportContent += `"${s.user?.last_name || ''}","${s.user?.first_name || ''}","${s.student_number || ''}",`;
+        exportContent += `"${s.university || ''}","${s.program || ''}","${s.year_level || ''}","${s.user?.email || ''}"\n`;
       });
-      
       filename += '.csv';
     } else {
-      // Format PDF (simulé avec texte formaté)
-      mimeType = 'text/plain';
-      extension = 'txt';
-      
       exportContent = '=== LISTE DES ÉTUDIANTS ===\n\n';
       exportContent += `Date d'export: ${new Date().toLocaleDateString('fr-FR')}\n`;
-      exportContent += `Nombre d'étudiants: ${filteredStudents.length}\n\n`;
-      exportContent += '─'.repeat(80) + '\n\n';
-      
-      filteredStudents.forEach((student, index) => {
-        exportContent += `${index + 1}. ${student.nom}\n`;
-        exportContent += `   Matricule: ${student.matricule}\n`;
-        exportContent += `   Promotion: ${student.promotion}\n`;
-        exportContent += `   Spécialité: ${student.specialite}\n`;
-        exportContent += `   Stage: ${student.stageActuel}\n`;
-        exportContent += `   Période: ${student.dateDebut} - ${student.dateFin}\n`;
-        exportContent += `   Statut: ${student.statut}\n`;
-        exportContent += `   Note: ${student.note || 'Non noté'}\n`;
-        exportContent += '\n';
+      exportContent += `Nombre d'étudiants: ${students.length}\n\n`;
+      students.forEach((s, i) => {
+        exportContent += `${i + 1}. ${s.user?.first_name} ${s.user?.last_name}\n`;
+        exportContent += `   Matricule: ${s.student_number || '-'}\n`;
+        exportContent += `   Email: ${s.user?.email || '-'}\n\n`;
       });
-      
-      exportContent += '─'.repeat(80) + '\n';
-      exportContent += 'Fin de la liste\n';
-      
       filename += '.txt';
     }
-    
-    // Créer et télécharger le fichier
+
     const blob = new Blob([exportContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -147,39 +162,19 @@ export default function ListeEtudiantsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    // Notification
-    alert(`${filteredStudents.length} étudiants exportés en ${format.toUpperCase()} !`);
-  };
-
-  // Reset à la page 1 quand on filtre ou recherche
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-  };
-
-  const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchQuery('');
-    setCurrentPage(1);
   };
 
   return (
     <>
       <Navbar />
       <Header spaceName="Espace Encadrant" notificationCount={5} />
-      
+
       <div className="flex min-h-screen bg-white">
         <Sidebar />
-        
-        {/* Contenu principal */}
+
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
-            {/* En-tête avec titre et MiniCard */}
+            {/* Header */}
             <div className="mb-8">
               <div className="flex items-start justify-between mb-6">
                 <div>
@@ -190,48 +185,99 @@ export default function ListeEtudiantsPage() {
                     Liste des étudiants en stage actuellement sous votre encadrement
                   </p>
                 </div>
-                
-                {/* MiniCard pour le nombre total */}
-                <MiniCard 
+
+                <MiniCard
                   label="Total étudiants"
-                  count={filteredStudents.length}
+                  count={pagination.total}
                 />
               </div>
 
-              {/* Barre de recherche alignée à droite */}
-              <div className="flex justify-end">
-                <div className="w-full max-w-md">
-                  <SearchBarListe onSearch={handleSearch} />
+              {/* Search and actions */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1 max-w-md">
+                  <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Rechercher un étudiant..."
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={fetchStudents}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                    title="Actualiser"
+                  >
+                    <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => handleExport('excel')}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  >
+                    <Download className="w-4 h-4" />
+                    Excel
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <FileText className="w-4 h-4" />
+                    PDF
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Filtres avec bouton d'export */}
-            <div className="mb-6">
-              <FilterListe 
-                onFilterChange={handleFilterChange}
-                onReset={handleReset}
-                onExport={handleExport}
+            {/* Filters */}
+            <FilterBar onClear={clearAllFilters} hasActiveFilters={hasActiveFilters} className="mb-6">
+              <FilterDropdown
+                label="Programme"
+                value={filters.specialite}
+                onChange={(v) => setFilter('specialite', v)}
+                options={[
+                  { label: 'Médecine Générale', value: 'medecine' },
+                  { label: 'Pharmacie', value: 'pharmacie' },
+                  { label: 'Chirurgie Dentaire', value: 'dentaire' },
+                ]}
               />
-            </div>
-
-            {/* Tableau */}
-            <div className="w-full">
-              <TableListe students={paginatedStudents} />
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <PaginationListe
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
+              <FilterDropdown
+                label="Année"
+                value={filters.promotion}
+                onChange={(v) => setFilter('promotion', v)}
+                options={[
+                  { label: '1ère année', value: '1' },
+                  { label: '2ème année', value: '2' },
+                  { label: '3ème année', value: '3' },
+                  { label: '4ème année', value: '4' },
+                  { label: '5ème année', value: '5' },
+                ]}
               />
-            )}
+            </FilterBar>
+
+            {/* Data Table */}
+            <DataTable
+              data={students}
+              columns={columns}
+              keyExtractor={(item) => item.id}
+              loading={loading}
+              error={error}
+              emptyMessage="Aucun étudiant trouvé"
+              sortField={sort.field}
+              sortDirection={sort.direction}
+              onSort={setSort}
+              pagination={{
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total: pagination.total,
+                totalPages: pagination.totalPages,
+                onPageChange: pagination.setPage,
+                onPerPageChange: pagination.setPerPage,
+              }}
+            />
           </div>
         </main>
       </div>
-      
+
       <Footer />
     </>
   );

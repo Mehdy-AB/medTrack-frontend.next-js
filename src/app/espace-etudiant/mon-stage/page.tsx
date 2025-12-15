@@ -1,110 +1,203 @@
 "use client";
 
+import { useState, useEffect, useCallback } from 'react';
 import NavbarEtudiant from '../Components/NavbarEtudiant';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
 import SidebarEtudiant from '../Components/SidebarEtudiant';
-import TablePresences from './Components/TablePresences';
-import TableEvaluations from './Components/TableEvaluations';
-import { mockPresences } from './models/presence.model';
-import { mockEvaluations } from './models/evaluation.model';
-import { MapPin, User, Calendar } from 'lucide-react';
+import { MapPin, User, Calendar, RefreshCw } from 'lucide-react';
+import DataTable, { Column } from '../../Components/DataTable'; // Assuming I can reuse DataTable or similar table structure, or I'll just build simple tables as in design
+import { coreApi, evalApi } from '@/services';
+import type { Application, Attendance, Evaluation } from '@/types/api.types';
+import { useSession } from 'next-auth/react';
 
 export default function MonStagePage() {
+  const { data: session } = useSession();
+  const [currentStage, setCurrentStage] = useState<Application | null>(null);
+  const [presences, setPresences] = useState<Attendance[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 1. Get accepted application to identify current stage
+      // Assuming listApplications returns latest first or we filter
+      const appsRes = await coreApi.listApplications(); // Filter by status='accepted' ideally
+      const apps = (appsRes.data as any)?.data || (Array.isArray(appsRes.data) ? appsRes.data : []);
+      // Find latest accepted
+      const accepted = apps.find((a: Application) => a.status === 'accepted');
+
+      if (accepted) {
+        setCurrentStage(accepted);
+
+        // 2. Fetch presences for this student
+        const presRes = await evalApi.listAttendance({ limit: 100 }); // Fetch recent
+        const presData = (presRes.data as any)?.data || (Array.isArray(presRes.data) ? presRes.data : []);
+        setPresences(presData);
+
+        // 3. Fetch evaluations
+        const evalRes = await evalApi.listEvaluations({ limit: 100 });
+        const evalData = (evalRes.data as any)?.data || (Array.isArray(evalRes.data) ? evalRes.data : []);
+        setEvaluations(evalData);
+      }
+    } catch (err) {
+      console.error('Error fetching stage data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Columns for Presences (simplified)
+  const presenceColumns: Column<Attendance>[] = [
+    { key: 'date', header: 'Date', render: (i) => i.date ? new Date(i.date).toLocaleDateString() : '-' },
+    {
+      key: 'status', header: 'Statut', render: (i) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${i.status === 'present' ? 'bg-green-100 text-green-800' :
+            i.status === 'absent' ? 'bg-red-100 text-red-800' :
+              'bg-yellow-100 text-yellow-800'
+          }`}>
+          {i.status}
+        </span>
+      )
+    },
+  ];
+
+  // Columns for Evaluations
+  const evalColumns: Column<Evaluation>[] = [
+    { key: 'evaluator', header: 'Évaluateur', render: (i) => i.encadrant_id || 'Encadrant' },
+    { key: 'date', header: 'Date', render: (i) => i.evaluation_date ? new Date(i.evaluation_date).toLocaleDateString() : '-' },
+    { key: 'score', header: 'Note', render: (i) => <span className="font-bold">{i.average_score}/20</span> },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <RefreshCw className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
   return (
     <>
       <NavbarEtudiant />
       <Header spaceName="Espace Étudiant" notificationCount={2} />
-      
-      <div className="flex flex-1 ">
+
+      <div className="flex flex-1">
         <SidebarEtudiant />
-        
-        {/* Contenu principal */}
-        <main className="flex-1 ml-6 rounded-2xl  bg-gray-50">
+
+        <main className="flex-1 ml-6 rounded-2xl bg-gray-50">
           <div className="max-w-7xl mx-auto p-8">
-            
-            {/* En-tête avec carte de bienvenue */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-200">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-2xl">👋</span>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Bonjour,
-                    </h1>
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    SOFIA LAHNIN.
-                  </h2>
-                  <p className="text-gray-600 mb-4">
-                    Bienvenue sur votre espace de suivi de stage en médecine.
-                  </p>
 
-                  {/* Informations du stage */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-teal-50 p-2 rounded-lg">
-                        <MapPin className="text-teal-500" size={20} />
+            {/* Warning if no active stage */}
+            {!currentStage ? (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Aucun stage actif</h2>
+                <p className="text-gray-600 mb-4">Vous n'avez pas de stage accepté en cours.</p>
+                <a href="/espace-etudiant/annonces-stages" className="text-teal-600 hover:underline">Trouver un stage</a>
+              </div>
+            ) : (
+              <>
+                {/* Welcome Card */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-200">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-2xl">👋</span>
+                        <h1 className="text-2xl font-bold text-gray-900">Bonjour,</h1>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Hôpital</p>
-                        <p className="text-sm font-medium text-gray-900">Hôpital THENIA</p>
-                      </div>
-                    </div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                        {session?.user?.name || 'Étudiant'}.
+                      </h2>
+                      <p className="text-gray-600 mb-4">
+                        Bienvenue sur votre espace de suivi de stage.
+                      </p>
 
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-teal-50 p-2 rounded-lg">
-                        <User className="text-teal-500" size={20} />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Encadrant</p>
-                        <p className="text-sm font-medium text-gray-900">Dr. Lounès Ahmed</p>
-                      </div>
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-teal-50 p-2 rounded-lg">
+                            <MapPin className="text-teal-500" size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Stage</p>
+                            <p className="text-sm font-medium text-gray-900">{currentStage.offer?.title || 'Stage'}</p>
+                          </div>
+                        </div>
 
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-teal-50 p-2 rounded-lg">
-                        <Calendar className="text-teal-500" size={20} />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Période</p>
-                        <p className="text-sm font-medium text-gray-900">01 octobre - 31 octobre 2025</p>
-                      </div>
-                    </div>
-                  </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-teal-50 p-2 rounded-lg">
+                            <User className="text-teal-500" size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Service</p>
+                            <p className="text-sm font-medium text-gray-900">{currentStage.offer?.service_id || '-'}</p>
+                          </div>
+                        </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">Statut:</span>
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
-                        En cours
-                      </span>
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-teal-50 p-2 rounded-lg">
+                            <Calendar className="text-teal-500" size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Date début</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {currentStage.offer?.start_date ? new Date(currentStage.offer.start_date).toLocaleDateString() : '-'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">Statut:</span>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                            En cours
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Relevé de présences/absences */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Relevé de présences/absences
-              </h3>
-              <TablePresences presences={mockPresences} />
-            </div>
+                {/* Presences */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Relevé de présences/absences
+                  </h3>
+                  <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+                    <DataTable
+                      data={presences}
+                      columns={presenceColumns}
+                      keyExtractor={i => i.id}
+                      emptyMessage="Aucune présence enregistrée"
+                    />
+                  </div>
+                </div>
 
-            {/* Évaluation des Encadrants */}
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Évaluation des Encadrants
-              </h3>
-              <TableEvaluations evaluations={mockEvaluations} />
-            </div>
-
+                {/* Evaluations */}
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Évaluations reçues
+                  </h3>
+                  <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+                    <DataTable
+                      data={evaluations}
+                      columns={evalColumns}
+                      keyExtractor={i => i.id}
+                      emptyMessage="Aucune évaluation reçue"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>
-      
+
       <Footer />
     </>
   );

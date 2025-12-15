@@ -1,171 +1,226 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import NavbarAdmin from '../Components/NavbarAdmin';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
 import SidebarAdmin from '../Components/SidebarAdmin';
-import SearchBar from '../Components/SearchBar';
-import FilterButton from '../Components/FilterButton';
-import DataTable from '../Components/DataTable';
+import SearchInput from '@/app/Components/SearchInput';
+import { FilterDropdown, FilterBar } from '@/app/Components/FilterDropdown';
+import DataTable, { Column } from '@/app/Components/DataTable';
 import FormModal from '../Components/FormModal';
 import DeleteModal from '../Components/DeleteModal';
-import { Plus, GraduationCap } from 'lucide-react';
+import { Plus, GraduationCap, RefreshCw } from 'lucide-react';
+import { profileApi } from '@/services';
+import { usePagination, useFilters } from '@/hooks';
+import type { StudentWithUser } from '@/types/api.types';
 
-interface Etudiant {
-  id: string;
-  matricule: string;
-  nom: string;
-  prenom: string;
-  annee: string;
-  specialite: string;
-  motDePasse: string;
-  dateCreation: string;
-  actif: boolean;
-  photo?: string;
-}
-
-// Type pour les données du formulaire
-interface EtudiantFormData {
-  photo?: string;
-  matricule: string;
-  nom: string;
-  prenom: string;
-  annee: string;
-  specialite: string;
-  motDePasse: string;
+interface StudentFilters {
+  university: string;
+  program: string;
+  year_level: string;
 }
 
 export default function GestionEtudiants() {
-  const [etudiants, setEtudiants] = useState<Etudiant[]>([
-    {
-      id: '1',
-      matricule: '22232025001',
-      nom: 'Bouaid',
-      prenom: 'Karim',
-      annee: '3 ème année',
-      specialite: 'Medecine générale',
-      motDePasse: 'pass123',
-      dateCreation: '12/10/2025',
-      actif: true,
-      photo: 'https://i.pravatar.cc/150?img=1'
-    },
-    {
-      id: '2',
-      matricule: '22232025001',
-      nom: 'Belkacem',
-      prenom: 'Amina',
-      annee: '3 ème année',
-      specialite: 'Medecine générale',
-      motDePasse: 'pass456',
-      dateCreation: '03/11/2025',
-      actif: true,
-      photo: 'https://i.pravatar.cc/150?img=1'
-    },
-    {
-      id: '3',
-      matricule: '22232258002',
-      nom: 'Haddad',
-      prenom: 'Sofiane',
-      annee: '3 ème année',
-      specialite: 'Medecine générale',
-      motDePasse: 'pass789',
-      dateCreation: '01/11/2025',
-      actif: true,
-      photo: 'https://i.pravatar.cc/150?img=1'
-    }
-  ]);
+  // State
+  const [students, setStudents] = useState<StudentWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterBy, setFilterBy] = useState('matricule');
+  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedEtudiant, setSelectedEtudiant] = useState<Etudiant | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentWithUser | null>(null);
 
-  // Configuration des colonnes du tableau
-  const columns = [
-    { key: 'matricule', label: 'Matricule / ID' },
-    { 
-      key: 'nomComplet', 
-      label: 'Nom complet',
-      render: (_: unknown, row: Etudiant) => `${row.prenom} ${row.nom}`
-    },
-    { key: 'annee', label: 'Année' },
-    { key: 'specialite', label: 'Spécialité' },
-    { key: 'dateCreation', label: 'Date de création' }
-  ];
-
-  // Configuration des champs du formulaire AVEC photo
-  const formFields = [
-    { 
-      name: 'photo', 
-      label: 'Photo de profil', 
-      type: 'file' as const, 
-      accept: 'image/*',
-      required: false 
-    },
-    { name: 'matricule', label: 'Matricule', type: 'text' as const, placeholder: 'Matricule', required: true },
-    { name: 'nom', label: 'Nom', type: 'text' as const, placeholder: 'Nom', required: true },
-    { name: 'prenom', label: 'Prénom', type: 'text' as const, placeholder: 'Prénom', required: true },
-    { name: 'annee', label: 'Année', type: 'text' as const, placeholder: 'Année', required: true },
-    { name: 'specialite', label: 'Spécialité', type: 'text' as const, placeholder: 'Spécialité', required: true },
-    { name: 'motDePasse', label: 'Mot de passe', type: 'password' as const, placeholder: 'Mot de passe', required: true }
-  ];
-
-  // Options de filtrage
-  const filterOptions = [
-    { value: 'matricule', label: 'Matricule' },
-    { value: 'nom', label: 'Nom' },
-    { value: 'annee', label: 'Année' }
-  ];
-
-  // Filtrage des données
-  const filteredEtudiants = etudiants.filter((etudiant) => {
-    const searchLower = searchTerm.toLowerCase();
-    switch (filterBy) {
-      case 'matricule':
-        return etudiant.matricule.toLowerCase().includes(searchLower);
-      case 'nom':
-        return etudiant.nom.toLowerCase().includes(searchLower);
-      case 'annee':
-        return etudiant.annee.toLowerCase().includes(searchLower);
-      default:
-        return true;
-    }
+  // Hooks
+  const pagination = usePagination(10);
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<StudentFilters>({
+    university: '',
+    program: '',
+    year_level: '',
   });
 
-  // Ajouter un étudiant
-  const handleAdd = (data: EtudiantFormData) => {
-    const newEtudiant: Etudiant = {
-      id: Date.now().toString(),
-      ...data,
-      dateCreation: new Date().toLocaleDateString('fr-FR'),
-      actif: true
-    };
-    setEtudiants([...etudiants, newEtudiant]);
-    setShowAddModal(false);
-  };
+  // Fetch students
+  const fetchStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  // Modifier un étudiant
-  const handleEdit = (data: Partial<EtudiantFormData>) => {
-    if (selectedEtudiant) {
-      setEtudiants(etudiants.map(e =>
-        e.id === selectedEtudiant.id ? { ...selectedEtudiant, ...data } : e
-      ));
-      setShowEditModal(false);
-      setSelectedEtudiant(null);
+    try {
+      const params = {
+        ...toQueryParams(),
+        page: pagination.page,
+        limit: pagination.perPage,
+      };
+
+      const response = await profileApi.listStudents(params);
+      const data = response.data;
+
+      // Handle both paginated and array responses
+      if (Array.isArray(data)) {
+        setStudents(data);
+        pagination.setTotal(data.length);
+      } else if (data && 'data' in data) {
+        setStudents(data.data || []);
+        pagination.setTotal(data.total || 0);
+      } else {
+        setStudents([]);
+        pagination.setTotal(0);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError('Erreur lors du chargement des étudiants');
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, pagination.perPage, toQueryParams]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Table columns
+  const columns: Column<StudentWithUser>[] = [
+    {
+      key: 'student_number',
+      header: 'Matricule',
+      sortable: true,
+      render: (item) => item.student_number || '-'
+    },
+    {
+      key: 'name',
+      header: 'Nom complet',
+      sortable: true,
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+            <span className="text-teal-700 text-sm font-medium">
+              {(item.user?.first_name?.[0] || '') + (item.user?.last_name?.[0] || '')}
+            </span>
+          </div>
+          <div>
+            <p className="font-medium">{item.user?.first_name} {item.user?.last_name}</p>
+            <p className="text-xs text-gray-500">{item.user?.email}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'university',
+      header: 'Université',
+      sortable: true,
+      render: (item) => item.university || '-'
+    },
+    {
+      key: 'program',
+      header: 'Programme',
+      sortable: true,
+      render: (item) => item.program || '-'
+    },
+    {
+      key: 'year_level',
+      header: 'Année',
+      sortable: true,
+      render: (item) => item.year_level ? `${item.year_level}ème année` : '-'
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '120px',
+      render: (item) => (
+        <div className="flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedStudent(item);
+              setShowEditModal(true);
+            }}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+            title="Modifier"
+          >
+            <GraduationCap className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedStudent(item);
+              setShowDeleteModal(true);
+            }}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+            title="Supprimer"
+          >
+            ✕
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // Form fields
+  const formFields = [
+    { name: 'email', label: 'Email', type: 'email' as const, required: true },
+    { name: 'password', label: 'Mot de passe', type: 'password' as const, required: true },
+    { name: 'first_name', label: 'Prénom', type: 'text' as const, required: true },
+    { name: 'last_name', label: 'Nom', type: 'text' as const, required: true },
+    { name: 'student_number', label: 'Matricule', type: 'text' as const, required: false },
+    { name: 'university', label: 'Université', type: 'text' as const, required: false },
+    { name: 'program', label: 'Programme', type: 'text' as const, required: false },
+    { name: 'year_level', label: 'Année d\'études', type: 'number' as const, required: false },
+  ];
+
+  // Handlers
+  const handleAdd = async (data: Record<string, unknown>) => {
+    try {
+      await profileApi.createStudent({
+        email: data.email as string,
+        password: data.password as string,
+        first_name: data.first_name as string,
+        last_name: data.last_name as string,
+        user_id: '', // Will be set by backend
+        student_number: data.student_number as string,
+        university: data.university as string,
+        program: data.program as string,
+        year_level: data.year_level ? Number(data.year_level) : undefined,
+      });
+      setShowAddModal(false);
+      fetchStudents();
+    } catch (err) {
+      console.error('Error creating student:', err);
+      alert('Erreur lors de la création de l\'étudiant');
     }
   };
 
-  // Désactiver un étudiant
-  const handleDelete = () => {
-    if (selectedEtudiant) {
-      setEtudiants(etudiants.map(e =>
-        e.id === selectedEtudiant.id ? { ...e, actif: false } : e
-      ));
+  const handleEdit = async (data: Record<string, unknown>) => {
+    if (!selectedStudent) return;
+
+    try {
+      await profileApi.updateStudent(selectedStudent.id, {
+        student_number: data.student_number as string,
+        university: data.university as string,
+        program: data.program as string,
+        year_level: data.year_level ? Number(data.year_level) : undefined,
+      });
+      setShowEditModal(false);
+      setSelectedStudent(null);
+      fetchStudents();
+    } catch (err) {
+      console.error('Error updating student:', err);
+      alert('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      await profileApi.deleteStudent(selectedStudent.id);
       setShowDeleteModal(false);
-      setSelectedEtudiant(null);
+      setSelectedStudent(null);
+      fetchStudents();
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      alert('Erreur lors de la suppression');
     }
   };
 
@@ -179,44 +234,87 @@ export default function GestionEtudiants() {
 
         <main className="flex-1 rounded-3xl ml-5 p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
-            
-            {/* Barre de recherche et actions */}
-            <div className="flex items-center mb-7 gap-4">
-              <SearchBar
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                placeholder={`Rechercher un étudiant par ${filterBy}`}
-              />
 
-              <FilterButton
-                options={filterOptions}
-                selectedFilter={filterBy}
-                onFilterChange={setFilterBy}
-              />
+            {/* Header with search and actions */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex-1 max-w-md">
+                <SearchInput
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Rechercher un étudiant..."
+                />
+              </div>
 
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                Nouveau Étudiant
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={fetchStudents}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Actualiser"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 font-medium"
+                >
+                  <Plus className="w-5 h-5" />
+                  Nouveau Étudiant
+                </button>
+              </div>
             </div>
 
-            {/* Tableau */}
+            {/* Filters */}
+            <FilterBar onClear={clearAllFilters} hasActiveFilters={hasActiveFilters} className="mb-6">
+              <FilterDropdown
+                label="Université"
+                value={filters.university}
+                onChange={(v) => setFilter('university', v)}
+                options={[
+                  { label: 'Université de Boumerdès', value: 'boumerdes' },
+                  { label: 'Université d\'Alger', value: 'alger' },
+                ]}
+              />
+              <FilterDropdown
+                label="Programme"
+                value={filters.program}
+                onChange={(v) => setFilter('program', v)}
+                options={[
+                  { label: 'Médecine Générale', value: 'medecine_generale' },
+                  { label: 'Pharmacie', value: 'pharmacie' },
+                  { label: 'Chirurgie Dentaire', value: 'chirurgie_dentaire' },
+                ]}
+              />
+              <FilterDropdown
+                label="Année"
+                value={filters.year_level}
+                onChange={(v) => setFilter('year_level', v)}
+                options={[
+                  { label: '1ère année', value: '1' },
+                  { label: '2ème année', value: '2' },
+                  { label: '3ème année', value: '3' },
+                  { label: '4ème année', value: '4' },
+                  { label: '5ème année', value: '5' },
+                  { label: '6ème année', value: '6' },
+                ]}
+              />
+            </FilterBar>
+
+            {/* Data Table */}
             <DataTable
-              title="Tableau des étudiants"
+              data={students}
               columns={columns}
-              data={filteredEtudiants}
-              onEdit={(item: Etudiant) => {
-                setSelectedEtudiant(item);
-                setShowEditModal(true);
+              keyExtractor={(item) => item.id}
+              loading={loading}
+              error={error}
+              emptyMessage="Aucun étudiant trouvé"
+              pagination={{
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total: pagination.total,
+                totalPages: pagination.totalPages,
+                onPageChange: pagination.setPage,
+                onPerPageChange: pagination.setPerPage,
               }}
-              onDelete={(item: Etudiant) => {
-                setSelectedEtudiant(item);
-                setShowDeleteModal(true);
-              }}
-              actifKey="actif"
             />
 
             {/* Modals */}
@@ -224,7 +322,7 @@ export default function GestionEtudiants() {
               isOpen={showAddModal}
               onClose={() => setShowAddModal(false)}
               onSubmit={handleAdd}
-              title="Ajouter un nouveau étudiant"
+              title="Ajouter un nouvel étudiant"
               icon={<Plus className="w-6 h-6 text-white" />}
               fields={formFields}
               submitLabel="Ajouter Étudiant"
@@ -234,13 +332,18 @@ export default function GestionEtudiants() {
               isOpen={showEditModal}
               onClose={() => {
                 setShowEditModal(false);
-                setSelectedEtudiant(null);
+                setSelectedStudent(null);
               }}
               onSubmit={handleEdit}
               title="Modifier Étudiant"
               icon={<GraduationCap className="w-6 h-6 text-white" />}
-              fields={formFields}
-              initialData={selectedEtudiant}
+              fields={formFields.filter(f => !['email', 'password'].includes(f.name))}
+              initialData={selectedStudent ? {
+                student_number: selectedStudent.student_number,
+                university: selectedStudent.university,
+                program: selectedStudent.program,
+                year_level: selectedStudent.year_level,
+              } : undefined}
               submitLabel="Sauvegarder"
               showCancel={true}
             />
@@ -249,11 +352,11 @@ export default function GestionEtudiants() {
               isOpen={showDeleteModal}
               onClose={() => {
                 setShowDeleteModal(false);
-                setSelectedEtudiant(null);
+                setSelectedStudent(null);
               }}
               onConfirm={handleDelete}
               title="Supprimer Étudiant ?"
-              message={`Êtes-vous sûr de vouloir supprimer l'étudiant ${selectedEtudiant?.prenom} ${selectedEtudiant?.nom} ?`}
+              message={`Êtes-vous sûr de vouloir supprimer l'étudiant ${selectedStudent?.user?.first_name} ${selectedStudent?.user?.last_name} ?`}
             />
 
           </div>

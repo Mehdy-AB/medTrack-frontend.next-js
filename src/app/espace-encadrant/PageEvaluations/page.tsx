@@ -1,253 +1,271 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import Navbar from '../components/Navbar';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import NavbarEncadrant from '../components/Navbar';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import Sidebar from '../components/Sidebar';
+import SidebarEncadrant from '../components/Sidebar';
 import MiniCard from '../../Components/Cards/MiniCard';
-import SearchBarEvaluations from './components/SearchBarEvaluations';
-import FilterEvaluations, { FilterState } from './components/FilterEvaluations';
-import TableEvaluations from './components/TableEvaluations';
-import PaginationEvaluations from './components/PaginationEvaluations';
+import SearchInput from '../../Components/SearchInput';
+import { FilterDropdown, FilterBar } from '../../Components/FilterDropdown';
+import DataTable, { Column } from '../../Components/DataTable';
+import Pagination from '../../Components/Pagination';
+import { RefreshCw, ClipboardList, PenTool } from 'lucide-react';
+import { evalApi } from '@/services';
+import { usePagination, useFilters } from '@/hooks';
+import type { Evaluation } from '@/types/api.types';
 import EvaluationModal from './components/EvaluationModal';
 import SuccessModal from './components/SuccessModal';
-import ErrorModal from './components/ErrorModal';
-import { mockEvaluations, Evaluation } from './models/evaluation.model';
 
-const ITEMS_PER_PAGE = 10;
+interface EvaluationFilters {
+  status: string;
+}
 
 export default function EvaluationsPage() {
-  const [evaluations, setEvaluations] = useState<Evaluation[]>(mockEvaluations);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<FilterState>({
-    stage: '',
-    statut: ''
-  });
-  const [currentPage, setCurrentPage] = useState(1);
+  // State
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // Fonction de filtrage et recherche
-  const filteredEvaluations = useMemo(() => {
-    let result = [...evaluations];
+  // Hooks
+  const pagination = usePagination(10);
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<EvaluationFilters>({
+    status: '',
+  });
 
-    // Recherche
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      const numericQuery = Number(searchQuery);
-      const isExactNumber = !isNaN(numericQuery) && searchQuery.trim() !== '';
+  // Fetch evaluations
+  const fetchEvaluations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      result = result.filter((evaluation) => {
-        if (isExactNumber) {
-          return evaluation.noteMoyenne === numericQuery;
-        }
+    try {
+      const params = {
+        ...toQueryParams(),
+        page: pagination.page,
+        limit: pagination.perPage,
+      };
+
+      const response = await evalApi.listEvaluations(params);
+      const data = response.data;
+
+      if (Array.isArray(data)) {
+        setEvaluations(data);
+        pagination.setTotal(data.length);
+      } else if (data && 'data' in data) {
+        setEvaluations(data.data || []);
+        pagination.setTotal(data.total || 0);
+      } else {
+        setEvaluations([]);
+        pagination.setTotal(0);
+      }
+    } catch (err) {
+      console.error('Error fetching evaluations:', err);
+      setError('Erreur lors du chargement des évaluations');
+      setEvaluations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, pagination.perPage, toQueryParams]);
+
+  useEffect(() => {
+    fetchEvaluations();
+  }, [fetchEvaluations]);
+
+  // Actions
+  const handleEvaluate = async (data: any) => {
+    if (!selectedEvaluation) return;
+
+    try {
+      if (selectedEvaluation.id) {
+        await evalApi.updateEvaluation(selectedEvaluation.id, {
+          ...data,
+          status: 'completed',
+        });
+      } else {
+        // Create new if not exists (though typically list items should exist)
+        await evalApi.createEvaluation({
+          student_id: selectedEvaluation.student_id,
+          ...data,
+          status: 'completed',
+        });
+      }
+      setShowModal(false);
+      setShowSuccess(true);
+      fetchEvaluations();
+    } catch (err) {
+      console.error('Error submitting evaluation:', err);
+      alert('Erreur lors de la soumission');
+    }
+  };
+
+  // Table columns
+  const columns: Column<Evaluation>[] = [
+    {
+      key: 'student',
+      header: 'Étudiant',
+      sortable: true,
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold text-xs">
+            {(item.student?.user?.first_name?.[0] || '') + (item.student?.user?.last_name?.[0] || '')}
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">
+              {item.student?.user?.first_name} {item.student?.user?.last_name}
+            </div>
+            <div className="text-xs text-gray-500">{item.student?.student_number}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'average_score',
+      header: 'Note Moyenne',
+      sortable: true,
+      render: (item) => item.average_score ? (
+        <span className="font-bold text-gray-900">{item.average_score}/20</span>
+      ) : '-'
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      render: (item) => {
+        const isCompleted = item.status === 'completed';
         return (
-          evaluation.nom.toLowerCase().includes(query) ||
-          evaluation.matricule.toLowerCase().includes(query) ||
-          evaluation.stage.toLowerCase().includes(query)
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${isCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            }`}>
+            {isCompleted ? 'Complétée' : 'En attente'}
+          </span>
         );
-      });
+      }
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (item) => item.evaluation_date ? new Date(item.evaluation_date).toLocaleDateString('fr-FR') : '-'
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '100px',
+      render: (item) => (
+        <button
+          onClick={() => {
+            setSelectedEvaluation(item);
+            setShowModal(true);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg text-sm font-medium transition-colors"
+        >
+          <PenTool className="w-4 h-4" />
+          {item.status === 'completed' ? 'Modifier' : 'Évaluer'}
+        </button>
+      )
     }
-
-    // Filtres
-    if (filters.stage) {
-      result = result.filter((evaluation) => evaluation.stage === filters.stage);
-    }
-    if (filters.statut) {
-      result = result.filter((evaluation) => evaluation.statut === filters.statut);
-    }
-
-    return result;
-  }, [evaluations, searchQuery, filters]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredEvaluations.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedEvaluations = filteredEvaluations.slice(startIndex, endIndex);
-
-  // Handlers
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-  };
-
-  const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-  };
-
-  const handleExport = (format: 'pdf' | 'excel') => {
-    console.log(`Exporting as ${format}`, filteredEvaluations);
-    alert(`Export en ${format.toUpperCase()} en cours...`);
-    // TODO: Intégration backend pour export
-  };
-
-  const handleReset = () => {
-    setSearchQuery('');
-    setCurrentPage(1);
-  };
-
-  const handleEvaluate = (evaluation: Evaluation) => {
-    setSelectedEvaluation(evaluation);
-    setShowEvaluationModal(true);
-  };
-
-  const handleSaveDraft = (data: any) => {
-    if (!selectedEvaluation) return;
-
-    // Mettre à jour l'évaluation dans l'état local
-    setEvaluations(prev => prev.map(ev => 
-      ev.id === selectedEvaluation.id 
-        ? {
-            ...ev,
-            criteres: data.criteres,
-            commentaire: data.commentaire,
-            noteMoyenne: data.noteMoyenne ? Number(data.noteMoyenne) : null,
-            dateModification: new Date().toLocaleDateString('fr-FR'),
-            statut: 'En cours'
-          }
-        : ev
-    ));
-
-    // TODO: Appel API backend
-    console.log('API: Save draft', {
-      evaluationId: selectedEvaluation.id,
-      ...data
-    });
-
-    setShowEvaluationModal(false);
-    setSuccessMessage('Brouillon enregistré avec succès');
-    setShowSuccessModal(true);
-  };
-
-  const handleSubmitEvaluation = (data: any) => {
-    if (!selectedEvaluation) return;
-
-    // Mettre à jour l'évaluation dans l'état local
-    setEvaluations(prev => prev.map(ev => 
-      ev.id === selectedEvaluation.id 
-        ? {
-            ...ev,
-            criteres: data.criteres,
-            commentaire: data.commentaire,
-            noteMoyenne: Number(data.noteMoyenne),
-            dateModification: new Date().toLocaleDateString('fr-FR'),
-            statut: 'Finalisée'
-          }
-        : ev
-    ));
-
-    // TODO: Appel API backend
-    console.log('API: Submit evaluation', {
-      evaluationId: selectedEvaluation.id,
-      ...data
-    });
-
-    setShowEvaluationModal(false);
-    setSuccessMessage('Évaluation soumise avec succès');
-    setShowSuccessModal(true);
-  };
-
-  const handleError = () => {
-    setShowEvaluationModal(false);
-    setShowErrorModal(true);
-  };
+  ];
 
   return (
     <>
-      <Navbar />
-      <Header spaceName="Espace Encadrant" notificationCount={5} />
-      
+      <NavbarEncadrant />
+      <Header spaceName="Espace Chef de Service" notificationCount={5} />
+
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
-        
-        {/* Contenu principal */}
+        <SidebarEncadrant />
+
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
-            {/* En-tête avec titre et MiniCard */}
+            {/* Header */}
             <div className="mb-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    Évaluations
-                  </h1>
-                  <p className="text-gray-600">
-                    Liste des étudiants en stage actuellement sous votre encadrement
-                  </p>
-                </div>
-                
-                {/* MiniCard pour le nombre total */}
-                <MiniCard 
-                  label="Total étudiants"
-                  count={filteredEvaluations.length}
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Évaluations des Stagiaires
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Gérez les évaluations de fin de stage
+              </p>
+
+              <div className="flex gap-4 mb-8">
+                <MiniCard
+                  label="Total à évaluer"
+                  count={evaluations.filter(e => e.status !== 'completed').length}
+                />
+                <MiniCard
+                  label="Complétées"
+                  count={evaluations.filter(e => e.status === 'completed').length}
                 />
               </div>
 
-              {/* Barre de recherche alignée à droite */}
-              <div className="flex justify-end">
-                <div className="w-full max-w-md">
-                  <SearchBarEvaluations onSearch={handleSearch} />
+              {/* Search & Refresh */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1 max-w-md">
+                  <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Rechercher une évaluation..."
+                  />
                 </div>
+                <button
+                  onClick={fetchEvaluations}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
 
-            {/* Filtres */}
-            <div className="mb-6">
-              <FilterEvaluations 
-                onFilterChange={handleFilterChange}
-                onExport={handleExport}
-                onReset={handleReset}
+            {/* Filters */}
+            <FilterBar onClear={clearAllFilters} hasActiveFilters={hasActiveFilters} className="mb-6">
+              <FilterDropdown
+                label="Statut"
+                value={filters.status}
+                onChange={(v) => setFilter('status', v)}
+                options={[
+                  { label: 'En attente', value: 'pending' },
+                  { label: 'Complétée', value: 'completed' },
+                ]}
               />
-            </div>
+            </FilterBar>
 
-            {/* Tableau */}
-            <div className="w-full">
-              <TableEvaluations 
-                evaluations={paginatedEvaluations}
-                onEvaluate={handleEvaluate}
-              />
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <PaginationEvaluations
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            )}
+            {/* Table */}
+            <DataTable
+              data={evaluations}
+              columns={columns}
+              keyExtractor={(item) => item.id}
+              loading={loading}
+              error={error}
+              emptyMessage="Aucune évaluation trouvée"
+              pagination={{
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total: pagination.total,
+                totalPages: pagination.totalPages,
+                onPageChange: pagination.setPage,
+                onPerPageChange: pagination.setPerPage,
+              }}
+            />
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
-      {/* Modals */}
+      {/* Evaluation Modal */}
       {selectedEvaluation && (
         <EvaluationModal
-          isOpen={showEvaluationModal}
-          onClose={() => setShowEvaluationModal(false)}
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
           evaluation={selectedEvaluation}
-          onSave={handleSaveDraft}
-          onSubmit={handleSubmitEvaluation}
-          onError={handleError}
+          onSubmit={handleEvaluate}
+          onSave={() => { }}
+          onError={() => { }}
         />
       )}
 
       <SuccessModal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        message={successMessage}
-      />
-
-      <ErrorModal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message="Évaluation enregistrée avec succès !"
       />
     </>
   );
