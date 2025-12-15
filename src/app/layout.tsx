@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'Plateforme de gestion des stages médicaux à Boumerdès',
 };
 
+import Providers from './Providers';
+
 export default function RootLayout({
   children,
 }: {
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

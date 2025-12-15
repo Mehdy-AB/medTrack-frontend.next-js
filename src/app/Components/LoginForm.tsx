@@ -4,6 +4,7 @@ import { GraduationCap, UserCheck, Settings, Building2 } from "lucide-react";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import { signIn } from 'next-auth/react';
 
 interface LoginFormProps {
   role: 'etudiant' | 'encadrant' | 'admin' | 'etablissement';
@@ -67,13 +68,25 @@ export default function LoginForm({ role }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simuler une requête de connexion
-    setTimeout(() => {
-      console.log('Login:', { role, username, password });
-      // Rediriger vers le dashboard approprié
-      router.push(`/dashboard/${role}`);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: username,
+        password: password,
+      });
+
+      if (result?.error) {
+        console.error('Login error:', result.error);
+        alert('Échec de la connexion. Vérifiez vos identifiants.'); // Simple alert for now
+        setIsLoading(false);
+      } else {
+        router.push(`/dashboard/${role}`);
+        router.refresh(); // Refresh to update session
+      }
+    } catch (error) {
+      console.error('Login exception:', error);
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -95,7 +108,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       {/* Contenu principal */}
       <main className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          
+
           {/* Afficher ce div seulement si le rôle est "etudiant" */}
           {role === 'etudiant' && (
             <div className="bg-teal-200/50 rounded-lg py-4 px-6 mb-8">
@@ -103,7 +116,7 @@ export default function LoginForm({ role }: LoginFormProps) {
                 <h2 className="text-base font-semibold text-white text-center">
                   nom d&apos;utilisateur = année de bac + matricule du bac ex:20251056989
                 </h2>
-              </div>             
+              </div>
             </div>
           )}
 
@@ -117,7 +130,7 @@ export default function LoginForm({ role }: LoginFormProps) {
                     {config.title}
                   </p>
                 </div>
-                
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                     {config.userIcon}
@@ -164,13 +177,13 @@ export default function LoginForm({ role }: LoginFormProps) {
 
             {/* Lien mot de passe oublié */}
             <div className="mt-6 text-center">
-                <button
-                    type="button"
-                    onClick={() => router.push(`/reset-password/${role}`)}
-                    className="text-sm text-gray-600 hover:text-teal-500 transition-colors"
-                >
-                    Mot de passe oublié ?
-                </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/reset-password/${role}`)}
+                className="text-sm text-gray-600 hover:text-teal-500 transition-colors"
+              >
+                Mot de passe oublié ?
+              </button>
             </div>
           </div>
         </div>

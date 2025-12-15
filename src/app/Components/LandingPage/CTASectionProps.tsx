@@ -1,14 +1,21 @@
+'use client';
+
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+
 interface CTASectionProps {
   title: string;
   description: string;
   imagePath: string;
 }
- const handleLoginClick = () => {
+
+const CTASection = ({ title, description, imagePath }: CTASectionProps) => {
+  const router = useRouter();
+
+  const handleLoginClick = () => {
     router.push('/choose-role');
   };
 
-const CTASection = ({ title, description, imagePath }: CTASectionProps) => {
   return (
     <section className="py-20 bg-linear-to-br from-white to-cyan-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +70,7 @@ const CTASection = ({ title, description, imagePath }: CTASectionProps) => {
               Se connecter
             </a>
 
-             
+
           </div>
         </div>
       </div>

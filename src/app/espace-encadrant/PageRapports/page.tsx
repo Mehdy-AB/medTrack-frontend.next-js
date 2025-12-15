@@ -12,12 +12,12 @@ import TableRapports from './components/TableRapports';
 import RapportCard from './components/RapportCard';
 import GenerationModal from './components/GenerationModal';
 import SuppressionModal from './components/SuppressionModal';
-import { 
-  mockRapportsEtudiants, 
-  mockRapportsGeneres, 
-  RapportEtudiant, 
+import {
+  mockRapportsEtudiants,
+  mockRapportsGeneres,
+  RapportEtudiant,
   RapportGenere,
-  ConfigRapport 
+  ConfigRapport
 } from './models/rapport.model';
 
 const ITEMS_PER_PAGE = 10;
@@ -82,7 +82,7 @@ export default function RapportsPage() {
     const complets = rapportsEtudiants.filter(r => r.statut === 'complet').length;
     const incomplets = rapportsEtudiants.filter(r => r.statut === 'incomplet').length;
     const enAttente = rapportsEtudiants.filter(r => r.statut === 'en_attente').length;
-    
+
     return { total, complets, incomplets, enAttente };
   }, [rapportsEtudiants]);
 
@@ -92,64 +92,64 @@ export default function RapportsPage() {
     content += `Type: ${config.typeRapport}\n`;
     content += `Période: ${config.periodeDebut} - ${config.periodeFin}\n`;
     content += `Date de génération: ${new Date().toLocaleDateString('fr-FR')}\n\n`;
-    
+
     content += `=== INFORMATIONS INCLUSES ===\n`;
     Object.entries(config.informations).forEach(([key, included]) => {
       if (included) {
-        const label = key === 'nom' ? 'Nom étudiant' : 
-                     key === 'matricule' ? 'Matricule' :
-                     key === 'stage' ? 'Stage' :
-                     key === 'periode' ? 'Période stage' :
-                     key === 'competences' ? 'Compétences' :
-                     key === 'noteGenerale' ? 'Note générale' :
-                     key === 'commentaires' ? 'Commentaires' : 
-                     'Documents';
+        const label = key === 'nom' ? 'Nom étudiant' :
+          key === 'matricule' ? 'Matricule' :
+            key === 'stage' ? 'Stage' :
+              key === 'periode' ? 'Période stage' :
+                key === 'competences' ? 'Compétences' :
+                  key === 'noteGenerale' ? 'Note générale' :
+                    key === 'commentaires' ? 'Commentaires' :
+                      'Documents';
         content += `✓ ${label}\n`;
       }
     });
-    
+
     content += `\n=== DONNÉES DES ÉTUDIANTS ===\n`;
-    
+
     // Filtrer les étudiants selon la sélection
-    const etudiantsInclus = config.etudiantsInclus 
+    const etudiantsInclus = config.etudiantsInclus
       ? rapportsEtudiants.filter(e => config.etudiantsInclus?.includes(e.id))
       : rapportsEtudiants;
-    
+
     etudiantsInclus.forEach(etudiant => {
       content += `\n--- ${etudiant.nom} ---\n`;
-      
+
       if (config.informations.nom) content += `Nom: ${etudiant.nom}\n`;
       if (config.informations.matricule) content += `Matricule: ${etudiant.matricule}\n`;
       if (config.informations.stage) content += `Stage: ${etudiant.stage}\n`;
       if (config.informations.periode) content += `Période: ${etudiant.periode}\n`;
-      
+
       if (config.informations.competences && etudiant.competences.length > 0) {
         content += `Compétences: ${etudiant.competences.join(', ')}\n`;
       }
-      
+
       if (config.informations.noteGenerale && etudiant.noteGenerale !== undefined) {
         content += `Note générale: ${etudiant.noteGenerale}/20\n`;
       }
-      
+
       if (config.informations.commentaires && etudiant.commentaires) {
         content += `Commentaires: ${etudiant.commentaires}\n`;
       }
-      
+
       if (config.informations.documents && etudiant.documents.length > 0) {
         content += `Documents: ${etudiant.documents.join(', ')}\n`;
       }
     });
-    
+
     if (config.fichierJoint) {
       content += `\n=== FICHIER JOINT ===\n`;
       content += `Nom: ${config.fichierJoint.name}\n`;
       content += `Taille: ${(config.fichierJoint.size / 1024).toFixed(2)} KB\n`;
       content += `Type: ${config.fichierJoint.type}\n`;
     }
-    
+
     content += `\n=== FIN DU RAPPORT ===\n`;
     content += `Généré automatiquement par MedTrack\n`;
-    
+
     return content;
   };
 
@@ -159,7 +159,7 @@ export default function RapportsPage() {
       alert('Ce rapport ne contient pas de données à télécharger');
       return;
     }
-    
+
     // Si le rapport a un fichier uploadé, le télécharger directement
     if (rapport.fichier) {
       const url = URL.createObjectURL(rapport.fichier);
@@ -172,11 +172,11 @@ export default function RapportsPage() {
       URL.revokeObjectURL(url);
       return;
     }
-    
+
     // Sinon, générer un fichier à partir du contenu
     let mimeType = 'text/plain';
     let extension = 'txt';
-    
+
     switch (rapport.nom.split('.').pop()?.toLowerCase()) {
       case 'pdf':
         mimeType = 'application/pdf';
@@ -193,7 +193,7 @@ export default function RapportsPage() {
         extension = 'docx';
         break;
     }
-    
+
     const content = rapport.contenu || `Rapport: ${rapport.nom}\nDate: ${rapport.dateGeneration}`;
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -204,7 +204,7 @@ export default function RapportsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     console.log(`Rapport téléchargé: ${a.download}`);
   };
 
@@ -222,12 +222,12 @@ export default function RapportsPage() {
   const handleExport = (format: 'pdf' | 'excel') => {
     const data = activeTab === 'etudiants' ? filteredRapportsEtudiants : rapportsGeneres;
     console.log(`Exporting as ${format}`, data);
-    
+
     // Créer un export réel
     let exportContent = '';
     let mimeType = 'text/plain';
     let extension = 'txt';
-    
+
     if (format === 'excel') {
       mimeType = 'text/csv';
       extension = 'csv';
@@ -249,7 +249,7 @@ export default function RapportsPage() {
         exportContent += `---\n\n`;
       });
     }
-    
+
     const blob = new Blob([exportContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -287,7 +287,7 @@ export default function RapportsPage() {
 
   const handleDownloadRapport = (rapport: RapportEtudiant) => {
     console.log('Téléchargement du rapport:', rapport);
-    
+
     // Créer un fichier pour l'étudiant
     let content = `=== RAPPORT INDIVIDUEL ===\n\n`;
     content += `Étudiant: ${rapport.nom}\n`;
@@ -301,7 +301,7 @@ export default function RapportsPage() {
     content += `Compétences: ${rapport.competences.join(', ')}\n`;
     if (rapport.commentaires) content += `Commentaires: ${rapport.commentaires}\n`;
     content += `Documents: ${rapport.documents.join(', ') || 'Aucun'}\n`;
-    
+
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -337,15 +337,15 @@ export default function RapportsPage() {
 
   const handleGenerateReport = (config: ConfigRapport) => {
     console.log('Génération de rapport avec config:', config);
-    
+
     // Générer le contenu du rapport
     const rapportContent = generateRapportContent(config);
-    
+
     // Déterminer la taille approximative
-    const tailleFichier = config.fichierJoint 
+    const tailleFichier = config.fichierJoint
       ? `${(config.fichierJoint.size / (1024 * 1024)).toFixed(1)} MB`
       : `${(rapportContent.length / 1024).toFixed(1)} KB`;
-    
+
     // Créer le nouveau rapport
     const nouveauRapport: RapportGenere = {
       id: `RG${Date.now()}`,
@@ -362,22 +362,22 @@ export default function RapportsPage() {
 
     // Ajouter à la liste
     setRapportsGeneres(prev => [nouveauRapport, ...prev]);
-    
+
     // Simulation de la génération
     setTimeout(() => {
-      setRapportsGeneres(prev => 
-        prev.map(r => 
-          r.id === nouveauRapport.id 
-            ? { ...r, statut: 'généré' } 
+      setRapportsGeneres(prev =>
+        prev.map(r =>
+          r.id === nouveauRapport.id
+            ? { ...r, statut: 'généré' }
             : r
         )
       );
-      
+
       // Télécharger automatiquement si demandé
       const shouldAutoDownload = window.confirm(
         'Rapport généré avec succès ! Voulez-vous le télécharger maintenant ?'
       );
-      
+
       if (shouldAutoDownload) {
         setTimeout(() => downloadRapport(nouveauRapport), 500);
       }
@@ -388,10 +388,10 @@ export default function RapportsPage() {
     <>
       <Navbar />
       <Header spaceName="Espace Encadrant" notificationCount={3} />
-      
+
       <div className="flex min-h-screen bg-white">
         <Sidebar />
-        
+
         {/* Contenu principal */}
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
@@ -406,22 +406,22 @@ export default function RapportsPage() {
                     Consultez, générez et exportez les rapports de stage
                   </p>
                 </div>
-                
+
                 {/* MiniCards pour les statistiques */}
                 <div className="flex gap-4">
-                  <MiniCard 
+                  <MiniCard
                     label="Total rapports"
                     count={stats.total}
                   />
-                  <MiniCard 
+                  <MiniCard
                     label="Complets"
                     count={stats.complets}
                   />
-                  <MiniCard 
+                  <MiniCard
                     label="Incomplets"
                     count={stats.incomplets}
                   />
-                  <MiniCard 
+                  <MiniCard
                     label="En attente"
                     count={stats.enAttente}
                   />
@@ -439,21 +439,19 @@ export default function RapportsPage() {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab('etudiants')}
-                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === 'etudiants'
+                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'etudiants'
                       ? 'border-primary text-primary'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                    }`}
                 >
                   Rapports étudiants
                 </button>
                 <button
                   onClick={() => setActiveTab('generes')}
-                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === 'generes'
+                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'generes'
                       ? 'border-primary text-primary'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                    }`}
                 >
                   Rapports générés
                 </button>
@@ -462,7 +460,7 @@ export default function RapportsPage() {
 
             {/* Filtres */}
             <div className="mb-6">
-              <FilterRapports 
+              <FilterRapports
                 onFilterChange={handleFilterChange}
                 onExport={handleExport}
                 onGenerate={() => setShowGenerationModal(true)}
@@ -475,10 +473,13 @@ export default function RapportsPage() {
               <>
                 {/* Tableau des rapports étudiants */}
                 <div className="w-full mb-8">
-                  <TableRapports 
+                  <TableRapports
                     rapports={paginatedRapports}
                     onView={handleViewRapport}
                     onDownload={handleDownloadRapport}
+                    onMessage={(rapport) => console.log('Message:', rapport.nom)}
+                    onEvaluate={(rapport) => console.log('Evaluate:', rapport.nom)}
+                    onList={(rapport) => console.log('List:', rapport.nom)}
                   />
                 </div>
 
@@ -518,7 +519,7 @@ export default function RapportsPage() {
                     onDelete={handleDeleteRapport}
                   />
                 ))}
-                
+
                 {rapportsGeneres.length === 0 && (
                   <div className="col-span-2 text-center py-12">
                     <p className="text-gray-500">Aucun rapport généré pour le moment</p>
@@ -535,7 +536,7 @@ export default function RapportsPage() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}
