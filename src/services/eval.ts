@@ -14,7 +14,7 @@ import type {
     PaginatedResponse,
 } from '@/types/api.types'
 
-const EVAL_BASE = '/eval/api'
+const EVAL_BASE = '/eval'
 
 export const evalApi = {
     // Attendance
@@ -47,13 +47,13 @@ export const evalApi = {
         page?: number;
         limit?: number
     }) =>
-        api.get<PaginatedResponse<AttendanceSummaryWithDetails>>(`${EVAL_BASE}/attendance-summaries/`, { params }),
+        api.get<PaginatedResponse<AttendanceSummaryWithDetails>>(`${EVAL_BASE}/attendance-summary/`, { params }),
 
     getAttendanceSummary: (id: string) =>
-        api.get<AttendanceSummaryWithDetails>(`${EVAL_BASE}/attendance-summaries/${id}/`),
+        api.get<AttendanceSummaryWithDetails>(`${EVAL_BASE}/attendance-summary/${id}/`),
 
     validateAttendance: (id: string) =>
-        api.post(`${EVAL_BASE}/attendance-summaries/${id}/validate/`),
+        api.post(`${EVAL_BASE}/attendance-summary/${id}/validate/`),
 
     // Evaluations
     listEvaluations: (params?: {

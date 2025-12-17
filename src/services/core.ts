@@ -12,7 +12,7 @@ import type {
     PaginatedResponse,
 } from '@/types/api.types'
 
-const CORE_BASE = '/core/api'
+const CORE_BASE = '/core'
 
 export const coreApi = {
     // Offers

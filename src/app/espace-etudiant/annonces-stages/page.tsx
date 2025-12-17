@@ -39,22 +39,41 @@ export default function AnnoncesStagesPage() {
 
     try {
       const params = {
-        ...toQueryParams(),
         page: pagination.page,
         limit: pagination.perPage,
-        status: 'open', // Only show open offers
+        // Removed status filter to show all offers including drafts
+        ...(filters.specialty && { specialty: filters.specialty }),
       };
 
       const response = await coreApi.listOffers(params);
+      console.log('=== OFFERS API DEBUG ===');
+      console.log('Full response:', response);
+      console.log('Response.data:', response.data);
+      console.log('Is array?:', Array.isArray(response.data));
       const data = response.data;
 
-      if (Array.isArray(data)) {
+      // Handle Django REST Framework pagination format
+      if (data && typeof data === 'object' && 'results' in data) {
+        const drfData = data as unknown as { results: any[]; count: number };
+        console.log('Got DRF paginated response with', drfData.results?.length || 0, 'offers');
+        setOffers(drfData.results || []);
+        pagination.setTotal(drfData.count || 0);
+      }
+      // Handle direct array response
+      else if (Array.isArray(data)) {
+        console.log('Got array response with', data.length, 'offers');
         setOffers(data);
         pagination.setTotal(data.length);
-      } else if (data && 'data' in data) {
+      }
+      // Handle custom paginated response {data: [], total: N}
+      else if (data && typeof data === 'object' && 'data' in data) {
+        console.log('Got custom paginated response with', data.data?.length || 0, 'offers');
         setOffers(data.data || []);
         pagination.setTotal(data.total || 0);
-      } else {
+      }
+      // Unexpected format
+      else {
+        console.warn('Unexpected response format:', data);
         setOffers([]);
         pagination.setTotal(0);
       }
@@ -65,7 +84,7 @@ export default function AnnoncesStagesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.perPage, toQueryParams]);
+  }, [pagination.page, pagination.perPage, filters.specialty, filters.status]);
 
   useEffect(() => {
     fetchOffers();
@@ -77,8 +96,7 @@ export default function AnnoncesStagesPage() {
     try {
       await coreApi.createApplication({
         offer_id: offerId,
-        student_id: '', // Will be filled by backend from token
-        motivation_letter: 'Je souhaite postuler à ce stage.',
+        motivation: 'Je souhaite postuler à ce stage.',
       });
       setSuccessMessage('Votre candidature a été envoyée avec succès !');
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -212,11 +230,13 @@ export default function AnnoncesStagesPage() {
                         </h3>
                         <p className="text-gray-600">{offer.description || '-'}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${offer.status === 'open'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${offer.status === 'published'
+                        ? 'bg-green-100 text-green-700'
+                        : offer.status === 'draft'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-gray-100 text-gray-700'
                         }`}>
-                        {offer.status === 'open' ? 'Ouvert' : offer.status}
+                        {offer.status === 'published' ? 'Ouvert' : offer.status === 'draft' ? 'Brouillon' : 'Fermé'}
                       </span>
                     </div>
 
@@ -228,21 +248,21 @@ export default function AnnoncesStagesPage() {
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {offer.start_date ? new Date(offer.start_date).toLocaleDateString('fr-FR') : '-'}
+                          {offer.period_start ? new Date(offer.period_start).toLocaleDateString('fr-FR') : '-'}
                           {' - '}
-                          {offer.end_date ? new Date(offer.end_date).toLocaleDateString('fr-FR') : '-'}
+                          {offer.period_end ? new Date(offer.period_end).toLocaleDateString('fr-FR') : '-'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        <span>{offer.available_spots || 0} place(s)</span>
+                        <span>{offer.available_slots || 0} place(s)</span>
                       </div>
                     </div>
 
                     <div className="flex justify-end">
                       <button
                         onClick={() => handleApply(offer.id)}
-                        disabled={applyingId === offer.id || offer.available_spots === 0}
+                        disabled={applyingId === offer.id || offer.available_slots === 0}
                         className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
                         {applyingId === offer.id ? (
