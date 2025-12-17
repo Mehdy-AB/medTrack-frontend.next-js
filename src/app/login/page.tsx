@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import LoginForm from '../Components/LoginForm';
 
 export default function Page() {
-    redirect('/choose-role');
+    return <LoginForm />;
 }
