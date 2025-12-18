@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import NavbarAdmin from '../Components/NavbarAdmin';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
@@ -12,14 +12,32 @@ import FormModal from '../Components/FormModal';
 import DeleteModal from '../Components/DeleteModal';
 import { Plus, UserCheck, RefreshCw } from 'lucide-react';
 import { profileApi } from '@/services';
+import { formatAxiosError } from '@/lib/error-handler';
 import { usePagination, useFilters } from '@/hooks';
 import type { EncadrantWithUser } from '@/types/api.types';
 
+// Constants for options
+const SPECIALITY_OPTIONS = [
+  { label: 'Cardiologie', value: 'Cardiologie' },
+  { label: 'Chirurgie', value: 'Chirurgie' },
+  { label: 'Pédiatrie', value: 'Pédiatrie' },
+  { label: 'Médecine Interne', value: 'Médecine Interne' },
+  { label: 'Radiologie', value: 'Radiologie' },
+  { label: 'Ophtalmologie', value: 'Ophtalmologie' },
+];
+
 interface EncadrantFilters {
+  [key: string]: string | number | boolean | string[] | undefined;
   establishment_id: string;
   service_id: string;
-  specialty: string;
+  speciality: string;
 }
+
+const INITIAL_FILTERS: EncadrantFilters = {
+  establishment_id: '',
+  service_id: '',
+  speciality: '',
+};
 
 export default function GestionEncadrants() {
   // State
@@ -35,11 +53,7 @@ export default function GestionEncadrants() {
 
   // Hooks
   const pagination = usePagination(10);
-  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<EncadrantFilters>({
-    establishment_id: '',
-    service_id: '',
-    specialty: '',
-  });
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<EncadrantFilters>(INITIAL_FILTERS);
 
   // Fetch encadrants
   const fetchEncadrants = useCallback(async () => {
@@ -82,10 +96,10 @@ export default function GestionEncadrants() {
   // Table columns
   const columns: Column<EncadrantWithUser>[] = [
     {
-      key: 'employee_id',
-      header: 'Matricule',
+      key: 'cin', // Changed from employee_id
+      header: 'CIN', // Changed from Matricule
       sortable: true,
-      render: (item) => item.employee_id || '-'
+      render: (item) => item.cin || '-'
     },
     {
       key: 'name',
@@ -95,12 +109,12 @@ export default function GestionEncadrants() {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
             <span className="text-blue-700 text-sm font-medium">
-              {(item.user?.first_name?.[0] || '') + (item.user?.last_name?.[0] || '')}
+              {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
             </span>
           </div>
           <div>
-            <p className="font-medium">{item.user?.first_name} {item.user?.last_name}</p>
-            <p className="text-xs text-gray-500">{item.user?.email}</p>
+            <p className="font-medium">{item.first_name} {item.last_name}</p>
+            <p className="text-xs text-gray-500">{item.email}</p>
           </div>
         </div>
       )
@@ -109,13 +123,13 @@ export default function GestionEncadrants() {
       key: 'title',
       header: 'Titre',
       sortable: true,
-      render: (item) => item.title || '-'
+      render: (item) => item.position || '-' // Changed to position/title
     },
     {
-      key: 'specialty',
+      key: 'speciality',
       header: 'Spécialité',
       sortable: true,
-      render: (item) => item.specialty || '-'
+      render: (item) => item.speciality || '-'
     },
     {
       key: 'phone',
@@ -156,16 +170,28 @@ export default function GestionEncadrants() {
   ];
 
   // Form fields
-  const formFields = [
+  const formFields = useMemo(() => [
     { name: 'email', label: 'Email', type: 'email' as const, required: true },
     { name: 'password', label: 'Mot de passe', type: 'password' as const, required: true },
     { name: 'first_name', label: 'Prénom', type: 'text' as const, required: true },
     { name: 'last_name', label: 'Nom', type: 'text' as const, required: true },
-    { name: 'employee_id', label: 'Matricule', type: 'text' as const, required: false },
-    { name: 'title', label: 'Titre', type: 'text' as const, required: false },
-    { name: 'specialty', label: 'Spécialité', type: 'text' as const, required: false },
+    { name: 'cin', label: 'CIN', type: 'text' as const, required: false },
+    { name: 'position', label: 'Titre/Poste', type: 'text' as const, required: false },
+    {
+      name: 'speciality',
+      label: 'Spécialité',
+      type: 'select' as const,
+      required: false,
+      options: SPECIALITY_OPTIONS,
+      allowCustom: true
+    },
     { name: 'phone', label: 'Téléphone', type: 'text' as const, required: false },
-  ];
+  ], []);
+
+  const editFormFields = useMemo(() =>
+    formFields.filter(f => !['email', 'password'].includes(f.name)),
+    [formFields]
+  );
 
   // Handlers
   const handleAdd = async (data: Record<string, unknown>) => {
@@ -175,17 +201,16 @@ export default function GestionEncadrants() {
         password: data.password as string,
         first_name: data.first_name as string,
         last_name: data.last_name as string,
-        user_id: '',
-        employee_id: data.employee_id as string,
-        title: data.title as string,
-        specialty: data.specialty as string,
+        cin: data.cin as string,
+        position: data.position as string,
+        speciality: data.speciality as string,
         phone: data.phone as string,
       });
       setShowAddModal(false);
       fetchEncadrants();
     } catch (err) {
       console.error('Error creating encadrant:', err);
-      alert('Erreur lors de la création de l\'encadrant');
+      alert(formatAxiosError(err, 'Erreur lors de la création de l\'encadrant'));
     }
   };
 
@@ -194,9 +219,11 @@ export default function GestionEncadrants() {
 
     try {
       await profileApi.updateEncadrant(selectedEncadrant.id, {
-        employee_id: data.employee_id as string,
-        title: data.title as string,
-        specialty: data.specialty as string,
+        first_name: data.first_name as string,
+        last_name: data.last_name as string,
+        cin: data.cin as string,
+        position: data.position as string,
+        speciality: data.speciality as string,
         phone: data.phone as string,
       });
       setShowEditModal(false);
@@ -204,7 +231,7 @@ export default function GestionEncadrants() {
       fetchEncadrants();
     } catch (err) {
       console.error('Error updating encadrant:', err);
-      alert('Erreur lors de la mise à jour');
+      alert(formatAxiosError(err, 'Erreur lors de la mise à jour'));
     }
   };
 
@@ -218,7 +245,7 @@ export default function GestionEncadrants() {
       fetchEncadrants();
     } catch (err) {
       console.error('Error deleting encadrant:', err);
-      alert('Erreur lors de la suppression');
+      alert(formatAxiosError(err, 'Erreur lors de la suppression'));
     }
   };
 
@@ -239,7 +266,7 @@ export default function GestionEncadrants() {
                 <SearchInput
                   value={search}
                   onChange={setSearch}
-                  placeholder="Rechercher un encadrant..."
+                  placeholder="Rechercher un encadrant par nom, CIN ou email..."
                 />
               </div>
 
@@ -265,14 +292,9 @@ export default function GestionEncadrants() {
             <FilterBar onClear={clearAllFilters} hasActiveFilters={hasActiveFilters} className="mb-6">
               <FilterDropdown
                 label="Spécialité"
-                value={filters.specialty}
-                onChange={(v) => setFilter('specialty', v)}
-                options={[
-                  { label: 'Cardiologie', value: 'cardiologie' },
-                  { label: 'Chirurgie', value: 'chirurgie' },
-                  { label: 'Pédiatrie', value: 'pediatrie' },
-                  { label: 'Médecine Interne', value: 'medecine_interne' },
-                ]}
+                value={filters.speciality}
+                onChange={(v) => setFilter('speciality', v)}
+                options={SPECIALITY_OPTIONS}
               />
             </FilterBar>
 
@@ -314,11 +336,13 @@ export default function GestionEncadrants() {
               onSubmit={handleEdit}
               title="Modifier Encadrant"
               icon={<UserCheck className="w-6 h-6 text-white" />}
-              fields={formFields.filter(f => !['email', 'password'].includes(f.name))}
+              fields={editFormFields}
               initialData={selectedEncadrant ? {
-                employee_id: selectedEncadrant.employee_id,
-                title: selectedEncadrant.title,
-                specialty: selectedEncadrant.specialty,
+                first_name: selectedEncadrant.first_name,
+                last_name: selectedEncadrant.last_name,
+                cin: selectedEncadrant.cin,
+                position: selectedEncadrant.position,
+                speciality: selectedEncadrant.speciality,
                 phone: selectedEncadrant.phone,
               } : undefined}
               submitLabel="Sauvegarder"
@@ -333,7 +357,7 @@ export default function GestionEncadrants() {
               }}
               onConfirm={handleDelete}
               title="Supprimer Encadrant ?"
-              message={`Êtes-vous sûr de vouloir supprimer l'encadrant ${selectedEncadrant?.user?.first_name} ${selectedEncadrant?.user?.last_name} ?`}
+              message={`Êtes-vous sûr de vouloir supprimer l'encadrant ${selectedEncadrant?.first_name} ${selectedEncadrant?.last_name} ?`}
             />
 
           </div>

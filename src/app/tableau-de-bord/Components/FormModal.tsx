@@ -7,11 +7,12 @@ import { useState, useEffect, useRef } from 'react';
 interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'select' | 'file';
+  type: 'text' | 'email' | 'password' | 'select' | 'file' | 'tel';
   placeholder?: string;
   options?: { value: string; label: string }[];
   required?: boolean;
   accept?: string; // Pour les fichiers (ex: "image/*")
+  allowCustom?: boolean; // Permettre d'ajouter une valeur personnalisée ("Autre")
 }
 
 interface FormModalProps {
@@ -26,6 +27,8 @@ interface FormModalProps {
   showCancel?: boolean;
 }
 
+const DEFAULT_INITIAL_DATA = {};
+
 const FormModal = ({
   isOpen,
   onClose,
@@ -33,7 +36,7 @@ const FormModal = ({
   title,
   icon,
   fields,
-  initialData = {},
+  initialData = DEFAULT_INITIAL_DATA,
   submitLabel = 'Ajouter',
   showCancel = false
 }: FormModalProps) => {
@@ -46,7 +49,21 @@ const FormModal = ({
   // Mettre à jour formData quand initialData change
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
-      setFormData(initialData);
+      // Check if any initial values are not in the predefined options for select fields with allowCustom
+      // If so, set the main field to 'other' and the custom field to the value
+      const processedData = { ...initialData };
+      fields.forEach(field => {
+        if (field.type === 'select' && field.allowCustom && initialData[field.name]) {
+          const value = initialData[field.name];
+          const isPredefined = field.options?.some(opt => opt.value === value);
+          if (!isPredefined) {
+            processedData[field.name] = 'other';
+            processedData[`${field.name}_custom`] = value;
+          }
+        }
+      });
+      setFormData(processedData);
+
       // Si initialData contient une photo URL, l'afficher
       if (initialData.photo) {
         setPhotoPreview(initialData.photo);
@@ -55,7 +72,7 @@ const FormModal = ({
       setFormData({});
       setPhotoPreview(null);
     }
-  }, [initialData]);
+  }, [initialData, fields]);
 
   if (!isOpen) return null;
 
@@ -95,12 +112,12 @@ const FormModal = ({
     // TODO BACKEND: Upload de la photo
     // Si une photo a été sélectionnée, l'uploader d'abord
     let photoUrl = formData.photo || null;
-    
+
     if (photoFile) {
       // Exemple d'upload (à adapter selon ton backend)
       const formDataUpload = new FormData();
       formDataUpload.append('photo', photoFile);
-      
+
       try {
         // const response = await fetch('/api/upload/photo', {
         //   method: 'POST',
@@ -108,7 +125,7 @@ const FormModal = ({
         // });
         // const data = await response.json();
         // photoUrl = data.photoUrl;
-        
+
         // Pour l'instant, utiliser la preview comme URL
         photoUrl = photoPreview;
       } catch (error) {
@@ -116,11 +133,19 @@ const FormModal = ({
       }
     }
 
-    // Ajouter l'URL de la photo aux données du formulaire
-    const dataToSubmit = {
-      ...formData,
-      photo: photoUrl
-    };
+    // Prepare data submission
+    const dataToSubmit = { ...formData };
+
+    // Handle custom fields
+    fields.forEach(field => {
+      if (field.type === 'select' && field.allowCustom && formData[field.name] === 'other') {
+        dataToSubmit[field.name] = formData[`${field.name}_custom`];
+      }
+      // Remove the temporary custom field from submission
+      delete dataToSubmit[`${field.name}_custom`];
+    });
+
+    dataToSubmit.photo = photoUrl;
 
     onSubmit(dataToSubmit);
     setFormData({});
@@ -159,26 +184,26 @@ const FormModal = ({
         {/* Photo de profil */}
         {photoField && (
           <div className="mb-6 flex flex-col items-center">
-            <div 
+            <div
               onClick={handlePhotoClick}
               className="relative w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors group overflow-hidden"
             >
               {photoPreview ? (
-                <img 
-                  src={photoPreview} 
-                  alt="Preview" 
+                <img
+                  src={photoPreview}
+                  alt="Preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <User className="w-16 h-16 text-gray-400" />
               )}
-              
+
               {/* Overlay au hover */}
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Upload className="w-8 h-8 text-white" />
               </div>
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -186,7 +211,7 @@ const FormModal = ({
               onChange={handleFileChange}
               className="hidden"
             />
-            
+
             <p className="text-sm text-gray-500 mt-2">
               Cliquez pour {photoPreview ? 'modifier' : 'ajouter'} une photo
             </p>
@@ -199,21 +224,38 @@ const FormModal = ({
         {/* Autres champs du formulaire */}
         <div className="space-y-4">
           {otherFields.map((field) => (
-            <div key={field.name}>
+            <div key={field.name} className="space-y-2">
               {field.type === 'select' ? (
-                <select
-                  value={formData[field.name] || ''}
-                  onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
-                  required={field.required}
-                >
-                  <option value="">{field.placeholder || `Sélectionner ${field.label}`}</option>
-                  {field.options?.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    value={formData[field.name] || ''}
+                    onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                    required={field.required}
+                  >
+                    <option value="">{field.placeholder || `Sélectionner ${field.label}`}</option>
+                    {field.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                    {field.allowCustom && (
+                      <option value="other">Autre (préciser)...</option>
+                    )}
+                  </select>
+
+                  {field.allowCustom && formData[field.name] === 'other' && (
+                    <input
+                      type="text"
+                      placeholder={`Préciser ${field.label}`}
+                      value={formData[`${field.name}_custom`] || ''}
+                      onChange={(e) => setFormData({ ...formData, [`${field.name}_custom`]: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 mt-2 bg-gray-50"
+                      required={field.required}
+                      autoFocus
+                    />
+                  )}
+                </>
               ) : field.type === 'password' ? (
                 <div className="relative">
                   <input

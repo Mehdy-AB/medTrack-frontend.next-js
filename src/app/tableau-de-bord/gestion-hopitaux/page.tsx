@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import NavbarAdmin from '../Components/NavbarAdmin';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
@@ -12,6 +12,7 @@ import FormModal from '../Components/FormModal';
 import DeleteModal from '../Components/DeleteModal';
 import { Plus, Building2, Phone, Mail, MapPin, Hash, RefreshCw } from 'lucide-react';
 import { profileApi } from '@/services';
+import { formatAxiosError } from '@/lib/error-handler';
 import { usePagination, useFilters } from '@/hooks';
 import type { Establishment } from '@/types/api.types';
 
@@ -19,6 +20,26 @@ interface EstablishmentFilters {
   type: string;
   wilaya: string;
 }
+
+const INITIAL_FILTERS: EstablishmentFilters = {
+  type: '',
+  wilaya: '',
+};
+
+const TYPE_OPTIONS = [
+  { label: 'CHU', value: 'CHU' },
+  { label: 'EPH', value: 'EPH' },
+  { label: 'Clinique', value: 'clinique' },
+  { label: 'Hôpital', value: 'hopital' },
+];
+
+const WILAYA_OPTIONS = [
+  { label: 'Alger', value: 'alger' },
+  { label: 'Boumerdès', value: 'boumerdes' },
+  { label: 'Blida', value: 'blida' },
+  { label: 'Oran', value: 'oran' },
+  { label: 'Constantine', value: 'constantine' },
+];
 
 export default function GestionHopitaux() {
   // State
@@ -34,10 +55,7 @@ export default function GestionHopitaux() {
 
   // Hooks
   const pagination = usePagination(10);
-  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<EstablishmentFilters>({
-    type: '',
-    wilaya: '',
-  });
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<EstablishmentFilters>(INITIAL_FILTERS);
 
   // Fetch establishments
   const fetchEstablishments = useCallback(async () => {
@@ -82,7 +100,7 @@ export default function GestionHopitaux() {
   const totalServicesCount = establishments.length; // Would need API for real count
 
   // Table columns
-  const columns: Column<Establishment>[] = [
+  const columns = useMemo<Column<Establishment>[]>(() => [
     {
       key: 'code',
       header: 'Code',
@@ -111,14 +129,9 @@ export default function GestionHopitaux() {
       )
     },
     {
-      key: 'address',
-      header: 'Adresse',
-      render: (item) => (
-        <div className="flex items-start gap-2">
-          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-          <span className="text-sm">{item.address || '-'}</span>
-        </div>
-      )
+      key: 'wilaya',
+      header: 'Wilaya',
+      render: (item) => <span className="capitalize">{item.wilaya || '-'}</span>
     },
     {
       key: 'email',
@@ -179,18 +192,32 @@ export default function GestionHopitaux() {
         </div>
       )
     }
-  ];
+  ], []);
 
   // Form fields
-  const formFields = [
+  const formFields = useMemo(() => [
     { name: 'code', label: 'Code', type: 'text' as const, placeholder: 'Ex: HOP-2025-001', required: false },
     { name: 'name', label: 'Nom', type: 'text' as const, placeholder: 'Nom de l\'établissement', required: true },
-    { name: 'type', label: 'Type', type: 'text' as const, placeholder: 'CHU, Clinique, etc.', required: false },
+    {
+      name: 'type',
+      label: 'Type',
+      type: 'select' as const,
+      required: false,
+      options: TYPE_OPTIONS,
+      allowCustom: true
+    },
     { name: 'address', label: 'Adresse', type: 'text' as const, placeholder: 'Adresse complète', required: false },
-    { name: 'wilaya', label: 'Wilaya', type: 'text' as const, placeholder: 'Wilaya', required: false },
+    {
+      name: 'wilaya',
+      label: 'Wilaya',
+      type: 'select' as const,
+      required: false,
+      options: WILAYA_OPTIONS,
+      allowCustom: true
+    },
     { name: 'email', label: 'Email', type: 'email' as const, placeholder: 'email@etablissement.dz', required: false },
     { name: 'phone', label: 'Téléphone', type: 'tel' as const, placeholder: '+213 XX XX XX XX', required: false },
-  ];
+  ], []);
 
   // Handlers
   const handleAdd = async (data: Record<string, unknown>) => {
@@ -208,7 +235,7 @@ export default function GestionHopitaux() {
       fetchEstablishments();
     } catch (err) {
       console.error('Error creating establishment:', err);
-      alert('Erreur lors de la création');
+      alert(formatAxiosError(err, 'Erreur lors de la création'));
     }
   };
 
@@ -230,7 +257,7 @@ export default function GestionHopitaux() {
       fetchEstablishments();
     } catch (err) {
       console.error('Error updating establishment:', err);
-      alert('Erreur lors de la mise à jour');
+      alert(formatAxiosError(err, 'Erreur lors de la mise à jour'));
     }
   };
 
@@ -244,7 +271,7 @@ export default function GestionHopitaux() {
       fetchEstablishments();
     } catch (err) {
       console.error('Error deleting establishment:', err);
-      alert('Erreur lors de la suppression');
+      alert(formatAxiosError(err, 'Erreur lors de la suppression'));
     }
   };
 
@@ -315,21 +342,13 @@ export default function GestionHopitaux() {
                 label="Type"
                 value={filters.type}
                 onChange={(v) => setFilter('type', v)}
-                options={[
-                  { label: 'CHU', value: 'CHU' },
-                  { label: 'EPH', value: 'EPH' },
-                  { label: 'Clinique', value: 'clinique' },
-                ]}
+                options={TYPE_OPTIONS}
               />
               <FilterDropdown
                 label="Wilaya"
                 value={filters.wilaya}
                 onChange={(v) => setFilter('wilaya', v)}
-                options={[
-                  { label: 'Alger', value: 'alger' },
-                  { label: 'Boumerdès', value: 'boumerdes' },
-                  { label: 'Blida', value: 'blida' },
-                ]}
+                options={WILAYA_OPTIONS}
               />
             </FilterBar>
 

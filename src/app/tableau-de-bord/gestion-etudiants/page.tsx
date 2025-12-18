@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import NavbarAdmin from '../Components/NavbarAdmin';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
@@ -12,6 +12,7 @@ import FormModal from '../Components/FormModal';
 import DeleteModal from '../Components/DeleteModal';
 import { Plus, GraduationCap, RefreshCw } from 'lucide-react';
 import { profileApi } from '@/services';
+import { formatAxiosError } from '@/lib/error-handler';
 import { usePagination, useFilters } from '@/hooks';
 import type { StudentWithUser } from '@/types/api.types';
 
@@ -19,7 +20,37 @@ interface StudentFilters {
   university: string;
   program: string;
   year_level: string;
+  [key: string]: string | number | boolean | string[] | undefined;
 }
+
+// Constants for options
+const UNIVERSITY_OPTIONS = [
+  { label: 'Université Mohammed V', value: 'Université Mohammed V' },
+  { label: 'Université Hassan II', value: 'Université Hassan II' },
+  { label: 'Université de Boumerdès', value: 'Université de Boumerdès' },
+  { label: 'Université d\'Alger', value: 'Université d\'Alger' },
+];
+
+const PROGRAM_OPTIONS = [
+  { label: 'Médecine Générale', value: 'Médecine Générale' },
+  { label: 'Pharmacie', value: 'Pharmacie' },
+  { label: 'Médecine Dentaire', value: 'Médecine Dentaire' },
+];
+
+const YEAR_OPTIONS = [
+  { label: '1ère année', value: '1' },
+  { label: '2ème année', value: '2' },
+  { label: '3ème année', value: '3' },
+  { label: '4ème année', value: '4' },
+  { label: '5ème année', value: '5' },
+  { label: '6ème année', value: '6' },
+];
+
+const INITIAL_FILTERS = {
+  university: '',
+  program: '',
+  year_level: '',
+};
 
 export default function GestionEtudiants() {
   // State
@@ -35,11 +66,8 @@ export default function GestionEtudiants() {
 
   // Hooks
   const pagination = usePagination(10);
-  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<StudentFilters>({
-    university: '',
-    program: '',
-    year_level: '',
-  });
+
+  const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<StudentFilters>(INITIAL_FILTERS);
 
   // Fetch students
   const fetchStudents = useCallback(async () => {
@@ -96,12 +124,12 @@ export default function GestionEtudiants() {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
             <span className="text-teal-700 text-sm font-medium">
-              {(item.user?.first_name?.[0] || '') + (item.user?.last_name?.[0] || '')}
+              {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
             </span>
           </div>
           <div>
-            <p className="font-medium">{item.user?.first_name} {item.user?.last_name}</p>
-            <p className="text-xs text-gray-500">{item.user?.email}</p>
+            <p className="font-medium">{item.first_name} {item.last_name}</p>
+            <p className="text-xs text-gray-500">{item.email}</p>
           </div>
         </div>
       )
@@ -158,16 +186,42 @@ export default function GestionEtudiants() {
   ];
 
   // Form fields
-  const formFields = [
+  const formFields = useMemo(() => [
     { name: 'email', label: 'Email', type: 'email' as const, required: true },
     { name: 'password', label: 'Mot de passe', type: 'password' as const, required: true },
     { name: 'first_name', label: 'Prénom', type: 'text' as const, required: true },
     { name: 'last_name', label: 'Nom', type: 'text' as const, required: true },
     { name: 'student_number', label: 'Matricule', type: 'text' as const, required: false },
-    { name: 'university', label: 'Université', type: 'text' as const, required: false },
-    { name: 'program', label: 'Programme', type: 'text' as const, required: false },
-    { name: 'year_level', label: 'Année d\'études', type: 'number' as const, required: false },
-  ];
+    {
+      name: 'university',
+      label: 'Université',
+      type: 'select' as const,
+      required: false,
+      options: UNIVERSITY_OPTIONS,
+      allowCustom: true
+    },
+    {
+      name: 'program',
+      label: 'Programme',
+      type: 'select' as const,
+      required: false,
+      options: PROGRAM_OPTIONS,
+      allowCustom: true
+    },
+    {
+      name: 'year_level',
+      label: 'Année',
+      type: 'select' as const,
+      required: true,
+      options: YEAR_OPTIONS
+    },
+  ], []);
+
+  const editFormFields = useMemo(() =>
+    formFields.filter(f => !['email', 'password'].includes(f.name)),
+    [formFields]
+  );
+
 
   // Handlers
   const handleAdd = async (data: Record<string, unknown>) => {
@@ -177,7 +231,6 @@ export default function GestionEtudiants() {
         password: data.password as string,
         first_name: data.first_name as string,
         last_name: data.last_name as string,
-        user_id: '', // Will be set by backend
         student_number: data.student_number as string,
         university: data.university as string,
         program: data.program as string,
@@ -187,7 +240,7 @@ export default function GestionEtudiants() {
       fetchStudents();
     } catch (err) {
       console.error('Error creating student:', err);
-      alert('Erreur lors de la création de l\'étudiant');
+      alert(formatAxiosError(err, 'Erreur lors de la création de l\'étudiant'));
     }
   };
 
@@ -196,6 +249,8 @@ export default function GestionEtudiants() {
 
     try {
       await profileApi.updateStudent(selectedStudent.id, {
+        first_name: data.first_name as string,
+        last_name: data.last_name as string,
         student_number: data.student_number as string,
         university: data.university as string,
         program: data.program as string,
@@ -206,7 +261,7 @@ export default function GestionEtudiants() {
       fetchStudents();
     } catch (err) {
       console.error('Error updating student:', err);
-      alert('Erreur lors de la mise à jour');
+      alert(formatAxiosError(err, 'Erreur lors de la mise à jour'));
     }
   };
 
@@ -220,7 +275,7 @@ export default function GestionEtudiants() {
       fetchStudents();
     } catch (err) {
       console.error('Error deleting student:', err);
-      alert('Erreur lors de la suppression');
+      alert(formatAxiosError(err, 'Erreur lors de la suppression'));
     }
   };
 
@@ -269,33 +324,19 @@ export default function GestionEtudiants() {
                 label="Université"
                 value={filters.university}
                 onChange={(v) => setFilter('university', v)}
-                options={[
-                  { label: 'Université de Boumerdès', value: 'boumerdes' },
-                  { label: 'Université d\'Alger', value: 'alger' },
-                ]}
+                options={UNIVERSITY_OPTIONS}
               />
               <FilterDropdown
                 label="Programme"
                 value={filters.program}
                 onChange={(v) => setFilter('program', v)}
-                options={[
-                  { label: 'Médecine Générale', value: 'medecine_generale' },
-                  { label: 'Pharmacie', value: 'pharmacie' },
-                  { label: 'Chirurgie Dentaire', value: 'chirurgie_dentaire' },
-                ]}
+                options={PROGRAM_OPTIONS}
               />
               <FilterDropdown
                 label="Année"
                 value={filters.year_level}
                 onChange={(v) => setFilter('year_level', v)}
-                options={[
-                  { label: '1ère année', value: '1' },
-                  { label: '2ème année', value: '2' },
-                  { label: '3ème année', value: '3' },
-                  { label: '4ème année', value: '4' },
-                  { label: '5ème année', value: '5' },
-                  { label: '6ème année', value: '6' },
-                ]}
+                options={YEAR_OPTIONS}
               />
             </FilterBar>
 
@@ -337,8 +378,10 @@ export default function GestionEtudiants() {
               onSubmit={handleEdit}
               title="Modifier Étudiant"
               icon={<GraduationCap className="w-6 h-6 text-white" />}
-              fields={formFields.filter(f => !['email', 'password'].includes(f.name))}
+              fields={editFormFields}
               initialData={selectedStudent ? {
+                first_name: selectedStudent.first_name,
+                last_name: selectedStudent.last_name,
                 student_number: selectedStudent.student_number,
                 university: selectedStudent.university,
                 program: selectedStudent.program,
@@ -356,7 +399,7 @@ export default function GestionEtudiants() {
               }}
               onConfirm={handleDelete}
               title="Supprimer Étudiant ?"
-              message={`Êtes-vous sûr de vouloir supprimer l'étudiant ${selectedStudent?.user?.first_name} ${selectedStudent?.user?.last_name} ?`}
+              message={`Êtes-vous sûr de vouloir supprimer l'étudiant ${selectedStudent?.first_name} ${selectedStudent?.last_name} ?`}
             />
 
           </div>

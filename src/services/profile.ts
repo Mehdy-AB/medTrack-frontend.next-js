@@ -12,6 +12,7 @@ import type {
     EncadrantWithDetails,
     CreateEncadrantProfileRequest,
     PaginatedResponse,
+    DashboardStats,
 } from '@/types/api.types'
 
 const PROFILE_BASE = '/profile/api'
@@ -90,6 +91,10 @@ export const profileApi = {
 
     deleteEncadrant: (id: string) =>
         api.delete(`${PROFILE_BASE}/encadrants/${id}/`),
+
+    // Dashboard
+    getDashboardStats: () =>
+        api.get<DashboardStats>(`${PROFILE_BASE}/dashboard-stats/`),
 }
 
 export default profileApi

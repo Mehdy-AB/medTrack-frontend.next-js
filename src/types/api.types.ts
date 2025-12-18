@@ -94,10 +94,13 @@ export interface AuditLog {
 // Establishment
 export interface Establishment {
     id: string;
+    code: string | null;
     name: string;
     type: string | null;
     address: string | null;
     city: string | null;
+    wilaya: string | null;
+    email: string | null;
     phone: string | null;
     metadata: Record<string, unknown> | null;
     created_at: string;
@@ -105,10 +108,13 @@ export interface Establishment {
 }
 
 export interface CreateEstablishmentRequest {
+    code?: string;
     name: string;
     type?: string;
     address?: string;
     city?: string;
+    wilaya?: string;
+    email?: string;
     phone?: string;
     metadata?: Record<string, unknown>;
 }
@@ -146,13 +152,26 @@ export interface StudentProfile {
     university: string | null;
     program: string | null;
     year_level: number | null;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+    phone: string | null;
     extra: Record<string, unknown> | null;
     created_at: string;
     updated_at: string;
 }
 
 export interface StudentWithUser extends StudentProfile {
-    user: {
+    user_data?: {
+        id: string;
+        email: string;
+        first_name: string | null;
+        last_name: string | null;
+        phone: string | null;
+    };
+    // Keep user for backward compatibility if needed, or remove if unused.
+    // The backend returns user_data.
+    user?: {
         id: string;
         email: string;
         first_name: string | null;
@@ -162,7 +181,10 @@ export interface StudentWithUser extends StudentProfile {
 }
 
 export interface CreateStudentProfileRequest {
-    user_id: string;
+    email: string;
+    password?: string;
+    first_name?: string;
+    last_name?: string;
     student_number?: string;
     date_of_birth?: string;
     university?: string;
@@ -172,6 +194,11 @@ export interface CreateStudentProfileRequest {
 }
 
 export interface UpdateStudentProfileRequest {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    cin?: string;
     student_number?: string;
     date_of_birth?: string;
     university?: string;
@@ -187,7 +214,13 @@ export interface EncadrantProfile {
     establishment_id: string | null;
     service_id: string | null;
     position: string | null;
-    specialty: string | null;
+    speciality: string | null;
+    cin: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+    phone: string | null;
+
     contact: {
         phone?: string;
         office?: string;
@@ -208,13 +241,41 @@ export interface EncadrantWithDetails extends EncadrantProfile {
     service: Service | null;
 }
 
+export interface EncadrantWithUser extends EncadrantProfile {
+    establishment_name?: string;
+    service_name?: string;
+    user_data?: {
+        id: string;
+        email: string;
+        first_name: string | null;
+        last_name: string | null;
+        phone: string | null;
+    };
+}
+
 export interface CreateEncadrantProfileRequest {
-    user_id: string;
+    email: string;
+    password?: string;
+    first_name: string;
+    last_name: string;
+    cin?: string;
     establishment_id?: string;
     service_id?: string;
     position?: string;
-    specialty?: string;
-    contact?: Record<string, string>;
+    speciality?: string;
+    phone?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface UpdateEncadrantProfileRequest {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    cin?: string;
+    position?: string;
+    speciality?: string;
+    metadata?: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -600,6 +661,14 @@ export interface ApiError {
     message: string;
     status_code: number;
     details?: Record<string, unknown>;
+}
+
+export interface DashboardStats {
+    total_students: number;
+    total_encadrants: number;
+    total_establishments: number;
+    total_services: number;
+    establishment_types: Record<string, number>;
 }
 
 export interface SuccessResponse {
