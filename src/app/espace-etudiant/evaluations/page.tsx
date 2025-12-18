@@ -11,23 +11,29 @@ import type { Evaluation } from '@/types/api.types';
 import DataTable, { Column } from '../../Components/DataTable';
 
 export default function MesEvaluationsPage() {
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]); // Using any for flexible backend response
   const [loading, setLoading] = useState(true);
 
   const fetchEvaluations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await evalApi.listEvaluations();
+      const response = await evalApi.getMyEvaluations();
+      console.log('Evaluations response:', response.data);
+
+      // Handle DRF pagination
       const data = response.data;
-      if (Array.isArray(data)) {
+      if (data && typeof data === 'object' && 'results' in data) {
+        setEvaluations(data.results || []);
+      } else if (Array.isArray(data)) {
         setEvaluations(data);
       } else if (data && 'data' in data) {
-        setEvaluations(data.data || []);
+        setEvaluations((data as any).data || []);
       } else {
         setEvaluations([]);
       }
     } catch (err) {
       console.error('Error fetching evaluations:', err);
+      setEvaluations([]);
     } finally {
       setLoading(false);
     }

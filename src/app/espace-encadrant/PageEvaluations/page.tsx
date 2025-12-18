@@ -23,7 +23,7 @@ interface EvaluationFilters {
 
 export default function EvaluationsPage() {
   // State
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]); // Using any for flexible response
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
@@ -43,20 +43,30 @@ export default function EvaluationsPage() {
 
     try {
       const params = {
-        ...toQueryParams(),
         page: pagination.page,
         limit: pagination.perPage,
+        ...(filters.status && { status: filters.status }),
       };
 
       const response = await evalApi.listEvaluations(params);
+      console.log('Evaluations response:', response.data);
       const data = response.data;
 
-      if (Array.isArray(data)) {
+      // Handle DRF pagination
+      if (data && typeof data === 'object' && 'results' in data) {
+        const drfData = data as unknown as { results: any[]; count: number };
+        setEvaluations(drfData.results || []);
+        pagination.setTotal(drfData.count || 0);
+      }
+      // Handle direct array
+      else if (Array.isArray(data)) {
         setEvaluations(data);
         pagination.setTotal(data.length);
-      } else if (data && 'data' in data) {
-        setEvaluations(data.data || []);
-        pagination.setTotal(data.total || 0);
+      }
+      // Handle custom pagination
+      else if (data && 'data' in data) {
+        setEvaluations((data as any).data || []);
+        pagination.setTotal((data as any).total || 0);
       } else {
         setEvaluations([]);
         pagination.setTotal(0);
@@ -68,7 +78,7 @@ export default function EvaluationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.perPage, toQueryParams]);
+  }, [pagination.page, pagination.perPage, filters.status]);
 
   useEffect(() => {
     fetchEvaluations();

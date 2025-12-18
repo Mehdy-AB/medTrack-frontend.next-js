@@ -13,32 +13,35 @@ import { useSession } from 'next-auth/react';
 
 export default function MonStagePage() {
   const { data: session } = useSession();
-  const [currentStage, setCurrentStage] = useState<Application | null>(null);
-  const [presences, setPresences] = useState<Attendance[]>([]);
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [currentStage, setCurrentStage] = useState<any | null>(null); // Using any since ApplicationWithDetails includes offer
+  const [presences, setPresences] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Get accepted application to identify current stage
-      // Assuming listApplications returns latest first or we filter
-      const appsRes = await coreApi.listApplications(); // Filter by status='accepted' ideally
-      const apps = (appsRes.data as any)?.data || (Array.isArray(appsRes.data) ? appsRes.data : []);
-      // Find latest accepted
-      const accepted = apps.find((a: Application) => a.status === 'accepted');
+      const appsRes = await coreApi.listApplications();
+      console.log('Applications response:', appsRes.data);
+
+      // Handle DRF pagination
+      const apps = appsRes.data?.results || (Array.isArray(appsRes.data) ? appsRes.data : []);
+
+      // Find latest accepted application
+      const accepted = apps.find((a: any) => a.status === 'accepted');
 
       if (accepted) {
         setCurrentStage(accepted);
 
-        // 2. Fetch presences for this student
-        const presRes = await evalApi.listAttendance({ limit: 100 }); // Fetch recent
-        const presData = (presRes.data as any)?.data || (Array.isArray(presRes.data) ? presRes.data : []);
+        // 2. Fetch attendance for this student
+        const presRes = await evalApi.listAttendance({ limit: 100 });
+        const presData = presRes.data?.results || (Array.isArray(presRes.data) ? presRes.data : []);
         setPresences(presData);
 
         // 3. Fetch evaluations
-        const evalRes = await evalApi.listEvaluations({ limit: 100 });
-        const evalData = (evalRes.data as any)?.data || (Array.isArray(evalRes.data) ? evalRes.data : []);
+        const evalRes = await evalApi.getMyEvaluations();
+        const evalData = evalRes.data?.results || (Array.isArray(evalRes.data) ? evalRes.data : []);
         setEvaluations(evalData);
       }
     } catch (err) {
@@ -58,8 +61,8 @@ export default function MonStagePage() {
     {
       key: 'status', header: 'Statut', render: (i) => (
         <span className={`px-2 py-1 rounded text-xs font-medium ${i.status === 'present' ? 'bg-green-100 text-green-800' :
-            i.status === 'absent' ? 'bg-red-100 text-red-800' :
-              'bg-yellow-100 text-yellow-800'
+          i.status === 'absent' ? 'bg-red-100 text-red-800' :
+            'bg-yellow-100 text-yellow-800'
           }`}>
           {i.status}
         </span>
@@ -145,7 +148,7 @@ export default function MonStagePage() {
                           <div>
                             <p className="text-xs text-gray-500">Date début</p>
                             <p className="text-sm font-medium text-gray-900">
-                              {currentStage.offer?.start_date ? new Date(currentStage.offer.start_date).toLocaleDateString() : '-'}
+                              {currentStage.offer?.period_start ? new Date(currentStage.offer.period_start).toLocaleDateString() : '-'}
                             </p>
                           </div>
                         </div>

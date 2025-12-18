@@ -23,7 +23,7 @@ interface ApplicationFilters {
 
 export default function CandidaturesPage() {
   // State
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<any[]>([]); // Using any for flexible backend response
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -38,27 +38,40 @@ export default function CandidaturesPage() {
     status: '',
   });
 
-  // Fetch applications
+  //Fetch applications
   const fetchApplications = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const params = {
-        ...toQueryParams(),
+      const params: any = {
         page: pagination.page,
         limit: pagination.perPage,
       };
 
+      if (filters.status) {
+        params.status = filters.status;
+      }
+
       const response = await coreApi.listApplications(params);
+      console.log('Applications response:', response.data);
       const data = response.data;
 
-      if (Array.isArray(data)) {
+      // Handle DRF pagination
+      if (data && typeof data === 'object' && 'results' in data) {
+        const drfData = data as unknown as { results: any[]; count: number };
+        setApplications(drfData.results || []);
+        pagination.setTotal(drfData.count || 0);
+      }
+      // Handle direct array
+      else if (Array.isArray(data)) {
         setApplications(data);
         pagination.setTotal(data.length);
-      } else if (data && 'data' in data) {
-        setApplications(data.data || []);
-        pagination.setTotal(data.total || 0);
+      }
+      // Handle custom pagination
+      else if (data && 'data' in data) {
+        setApplications((data as any).data || []);
+        pagination.setTotal((data as any).total || 0);
       } else {
         setApplications([]);
         pagination.setTotal(0);
@@ -70,7 +83,7 @@ export default function CandidaturesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.perPage, toQueryParams]);
+  }, [pagination.page, pagination.perPage, filters.status]);
 
   useEffect(() => {
     fetchApplications();
@@ -79,28 +92,29 @@ export default function CandidaturesPage() {
   // Stats
   const stats = useMemo(() => {
     return {
-      total: applications.length, // Only counted for current page if not handled by backend stats
-      pending: applications.filter(a => a.status === 'pending').length,
+      total: pagination.total,
+      pending: applications.filter(a => a.status === 'submitted').length,
       accepted: applications.filter(a => a.status === 'accepted').length,
       rejected: applications.filter(a => a.status === 'rejected').length,
     };
-  }, [applications]);
+  }, [applications, pagination.total]);
 
   // Actions
   const handleAction = async () => {
     if (!selectedApplication || !actionType) return;
 
     try {
-      await coreApi.updateApplication(selectedApplication.id, {
+      await coreApi.updateApplicationStatus(selectedApplication.id, {
         status: actionType === 'accept' ? 'accepted' : 'rejected',
         rejection_reason: actionReason,
-      });
+      } as any);
       setShowConfirm(false);
       setShowModal(false);
       fetchApplications();
+      alert('✅ Candidature mise à jour avec succès!');
     } catch (err) {
       console.error('Error updating application:', err);
-      alert('Erreur lors du traitement de la candidature');
+      alert('❌ Erreur lors du traitement de la candidature');
     }
   };
 
@@ -139,25 +153,25 @@ export default function CandidaturesPage() {
     {
       key: 'date',
       header: 'Date',
-      render: (item) => new Date(item.submission_date).toLocaleDateString('fr-FR')
+      render: (item) => (item as any).submitted_at ? new Date((item as any).submitted_at).toLocaleDateString('fr-FR') : '-'
     },
     {
       key: 'status',
       header: 'Statut',
       render: (item) => {
-        const styles = {
-          pending: 'bg-yellow-100 text-yellow-800',
+        const styles: Record<string, string> = {
+          submitted: 'bg-yellow-100 text-yellow-800',
           accepted: 'bg-green-100 text-green-800',
           rejected: 'bg-red-100 text-red-800',
         };
-        const labels = {
-          pending: 'En attente',
+        const labels: Record<string, string> = {
+          submitted: 'En attente',
           accepted: 'Acceptée',
           rejected: 'Refusée',
         };
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[item.status]}`}>
-            {labels[item.status]}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[item.status] || 'bg-gray-100 text-gray-800'}`}>
+            {labels[item.status] || item.status}
           </span>
         );
       }
@@ -179,7 +193,7 @@ export default function CandidaturesPage() {
             <Eye className="w-4 h-4" />
           </button>
 
-          {item.status === 'pending' && (
+          {item.status === 'submitted' && (
             <>
               <button
                 onClick={() => openAction(item, 'accept')}
@@ -253,7 +267,7 @@ export default function CandidaturesPage() {
                 value={filters.status}
                 onChange={(v) => setFilter('status', v)}
                 options={[
-                  { label: 'En attente', value: 'pending' },
+                  { label: 'En attente', value: 'submitted' },
                   { label: 'Acceptée', value: 'accepted' },
                   { label: 'Refusée', value: 'rejected' },
                 ]}
@@ -301,7 +315,7 @@ export default function CandidaturesPage() {
               <div>
                 <label className="text-sm font-medium text-gray-700">Motivation</label>
                 <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
-                  {selectedApplication.motivation_letter || 'Aucune lettre de motivation'}
+                  {(selectedApplication as any).metadata?.motivation || 'Aucune lettre de motivation'}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -323,7 +337,7 @@ export default function CandidaturesPage() {
               >
                 Fermer
               </button>
-              {selectedApplication.status === 'pending' && (
+              {selectedApplication.status === 'submitted' && (
                 <>
                   <button
                     onClick={() => {

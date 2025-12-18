@@ -26,11 +26,21 @@ export default function MesCandidaturesPage() {
       // Wait, listApplications takes params. If I don't pass student_id, it returns all?
       // Ideally backend filters by request.user.
       const response = await coreApi.listApplications();
+      console.log('Applications response:', response.data);
       const data = response.data;
-      if (Array.isArray(data)) {
+
+      // Handle Django REST Framework pagination
+      if (data && typeof data === 'object' && 'results' in data) {
+        const drfData = data as unknown as { results: any[]; count: number };
+        setApplications(drfData.results || []);
+      }
+      // Handle direct array
+      else if (Array.isArray(data)) {
         setApplications(data);
-      } else if (data && 'data' in data) {
-        setApplications(data.data || []);
+      }
+      // Handle custom pagination
+      else if (data && typeof data === 'object' && 'data' in data) {
+        setApplications((data as any).data || []);
       } else {
         setApplications([]);
       }
@@ -76,14 +86,15 @@ export default function MesCandidaturesPage() {
     const map: Record<string, string> = {
       accepted: 'Acceptée',
       rejected: 'Refusée',
-      pending: 'En attente',
+      submitted: 'En attente',
+      cancelled: 'Annulée',
     };
     return map[status] || status;
   };
 
   // Stats
   const acceptedCount = applications.filter(a => a.status === 'accepted').length;
-  const pendingCount = applications.filter(a => a.status === 'pending').length;
+  const pendingCount = applications.filter(a => a.status === 'submitted').length;
   const rejectedCount = applications.filter(a => a.status === 'rejected').length;
 
   return (
@@ -167,7 +178,7 @@ export default function MesCandidaturesPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar size={16} className="text-teal-500" />
-                              <span>Postulé le {new Date(candidature.submission_date).toLocaleDateString('fr-FR')}</span>
+                              <span>Postulé le {new Date(candidature.submitted_at).toLocaleDateString('fr-FR')}</span>
                             </div>
                           </div>
                         </div>
@@ -189,7 +200,7 @@ export default function MesCandidaturesPage() {
                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-700">
                         <span className="font-medium">Lettre de motivation : </span>
-                        {candidature.motivation_letter}
+                        {(candidature.metadata?.motivation || candidature.metadata?.['motivation'] || 'Aucune lettre de motivation fournie')}
                       </p>
                     </div>
                   </div>

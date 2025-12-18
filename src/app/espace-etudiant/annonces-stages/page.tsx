@@ -25,6 +25,11 @@ export default function AnnoncesStagesPage() {
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Modal state
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [motivation, setMotivation] = useState('');
+
   // Hooks
   const pagination = usePagination(10);
   const { filters, search, setSearch, setFilter, clearAllFilters, hasActiveFilters, toQueryParams } = useFilters<OfferFilters>({
@@ -90,20 +95,49 @@ export default function AnnoncesStagesPage() {
     fetchOffers();
   }, [fetchOffers]);
 
-  // Handle apply
-  const handleApply = async (offerId: string) => {
-    setApplyingId(offerId);
+  // Open application modal
+  const openApplicationModal = (offer: Offer) => {
+    setSelectedOffer(offer);
+    setMotivation('');
+    setShowApplicationModal(true);
+  };
+
+  // Close modal
+  const closeApplicationModal = () => {
+    setShowApplicationModal(false);
+    setSelectedOffer(null);
+    setMotivation('');
+  };
+
+  // Submit application
+  const submitApplication = async () => {
+    if (!selectedOffer) return;
+
+    // Validation
+    if (motivation.trim().length < 50) {
+      alert('Votre lettre de motivation doit contenir au moins 50 caractères.');
+      return;
+    }
+
+    setApplyingId(selectedOffer.id);
     try {
       await coreApi.createApplication({
-        offer_id: offerId,
-        motivation: 'Je souhaite postuler à ce stage.',
+        offer_id: selectedOffer.id,
+        motivation: motivation.trim(),
       });
+
       setSuccessMessage('Votre candidature a été envoyée avec succès !');
-      setTimeout(() => setSuccessMessage(null), 3000);
-      fetchOffers(); // Refresh to update available spots
-    } catch (err) {
+      closeApplicationModal();
+
+      // Navigate to mes-candidatures after 1.5 seconds
+      setTimeout(() => {
+        window.location.href = '/espace-etudiant/mes-candidatures';
+      }, 1500);
+
+    } catch (err: any) {
       console.error('Error applying:', err);
-      alert('Erreur lors de la candidature');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Erreur lors de la candidature';
+      alert(errorMsg);
     } finally {
       setApplyingId(null);
     }
@@ -261,7 +295,7 @@ export default function AnnoncesStagesPage() {
 
                     <div className="flex justify-end">
                       <button
-                        onClick={() => handleApply(offer.id)}
+                        onClick={() => openApplicationModal(offer)}
                         disabled={applyingId === offer.id || offer.available_slots === 0}
                         className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
@@ -298,6 +332,98 @@ export default function AnnoncesStagesPage() {
           </div>
         </main>
       </div>
+
+      {/* Application Modal */}
+      {showApplicationModal && selectedOffer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Postuler à ce stage
+              </h2>
+              <p className="text-gray-600">{selectedOffer.title}</p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Offer Details */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-700">Service: {selectedOffer.service_id}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-700">
+                    {selectedOffer.period_start ? new Date(selectedOffer.period_start).toLocaleDateString('fr-FR') : '-'}
+                    {' → '}
+                    {selectedOffer.period_end ? new Date(selectedOffer.period_end).toLocaleDateString('fr-FR') : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-700">{selectedOffer.available_slots} place(s) disponible(s)</span>
+                </div>
+              </div>
+
+              {/* Motivation Letter */}
+              <div>
+                <label htmlFor="motivation" className="block text-sm font-medium text-gray-700 mb-2">
+                  Lettre de motivation <span className="text-red-500">*</span>
+                  <span className="text-gray-500 font-normal ml-1">(minimum 50 caractères)</span>
+                </label>
+                <textarea
+                  id="motivation"
+                  value={motivation}
+                  onChange={(e) => setMotivation(e.target.value)}
+                  rows={8}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                  placeholder="Indiquez pourquoi vous souhaitez effectuer ce stage, vos motivations, et comment cette expérience s'inscrit dans votre parcours professionnel..."
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  {motivation.length} / 50 caractères minimum
+                </p>
+              </div>
+
+              {/* Warning */}
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <span className="font-semibold">Attention :</span> Une fois envoyée, votre candidature ne pourra plus être modifiée.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={closeApplicationModal}
+                disabled={applyingId !== null}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitApplication}
+                disabled={applyingId !== null || motivation.trim().length < 50}
+                className="flex items-center gap-2 px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                {applyingId ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Envoyer ma candidature
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

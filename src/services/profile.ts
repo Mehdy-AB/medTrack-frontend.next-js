@@ -65,6 +65,10 @@ export const profileApi = {
     updateStudent: (id: string, data: UpdateStudentProfileRequest) =>
         api.patch<StudentProfile>(`${PROFILE_BASE}/students/${id}/`, data),
 
+    // Update current user's profile (students/me endpoint)
+    updateMyProfile: (data: any) =>
+        api.patch<StudentProfile>(`${PROFILE_BASE}/students/me/`, data),
+
     deleteStudent: (id: string) =>
         api.delete(`${PROFILE_BASE}/students/${id}/`),
 

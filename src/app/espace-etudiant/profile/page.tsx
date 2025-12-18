@@ -3,13 +3,16 @@
 // ============================================
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import NavbarEtudiant from '../Components/NavbarEtudiant';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
 import SidebarEtudiant from '../Components/SidebarEtudiant';
 import Image from 'next/image';
-import { Edit2, Upload, FileText, X, Check, Download } from 'lucide-react';
+import { Edit2, Upload, FileText, X, Check, Download, Loader2 } from 'lucide-react';
+import { profileApi } from '@/services';
 
 interface Document {
   id: string;
@@ -20,49 +23,70 @@ interface Document {
 }
 
 export default function EtudiantProfilePage() {
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const [formData, setFormData] = useState({
-    fullName: 'Sofia Lahnin',
-    matricule: '22253258862', // Non modifiable
-    year: '3ème année',
-    specialty: 'Médecine générale',
-    email: 'sofialohnin@gmail.com',
-    phone: '0552986633',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    matricule: '', // From student profile
+    year: '',
+    specialty: '',
   });
 
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: '1',
-      nom: 'CV_Sofia_Lahnin.pdf',
-      type: 'CV',
-      dateUpload: '15/11/2025',
-      url: '/docs/cv.pdf'
-    },
-    {
-      id: '2',
-      nom: 'Releve_Notes_S5.pdf',
-      type: 'Relevé',
-      dateUpload: '10/11/2025',
-      url: '/docs/releve.pdf'
-    }
-  ]);
+  const [originalData, setOriginalData] = useState(formData);
 
-  const handleSave = () => {
-    // TODO: Appel API pour sauvegarder les modifications
-    console.log('Données sauvegardées:', formData);
-    setIsEditing(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+
+  // Fetch user data on mount
+  useEffect(() => {
+    if (session?.user) {
+      const user = session.user as any;
+
+      const userData = {
+        first_name: user.first_name || user.name?.split(' ')[0] || '',
+        last_name: user.last_name || user.name?.split(' ')[1] || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        matricule: user.id?.substring(0, 8) || '',
+        year: '3ème année',
+        specialty: 'Médecine générale',
+      };
+
+      setFormData(userData);
+      setOriginalData(userData);
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  }, [session]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await profileApi.updateMyProfile({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+      });
+
+      setOriginalData(formData);
+      setIsEditing(false);
+      alert('✅ Profil mis à jour avec succès!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('❌ Erreur lors de la mise à jour du profil');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    // Réinitialiser aux valeurs d'origine
-    setFormData({
-      fullName: 'Sofia Lahnin',
-      matricule: '22253258862',
-      year: '3ème année',
-      specialty: 'Médecine générale',
-      email: 'sofialohnin@gmail.com',
-      phone: '0552986633',
-    });
+    setFormData(originalData);
     setIsEditing(false);
   };
 
@@ -89,21 +113,29 @@ export default function EtudiantProfilePage() {
     return <FileText className="text-teal-500" size={20} />;
   };
 
-  const handleLogout = () => {
-    console.log('Déconnexion étudiant...');
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/auth/signin' });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <NavbarEtudiant />
       <Header spaceName="Espace Étudiant" notificationCount={2} />
-      
+
       <div className="flex flex-1">
         <SidebarEtudiant />
-        
+
         <div className="flex-1 ml-6 rounded-2xl p-6 bg-gray-50">
           <div className="max-w-4xl mx-auto space-y-6">
-            
+
             {/* Section Informations Personnelles */}
             <div className="bg-white rounded-xl shadow-sm p-8">
               <div className="flex items-center justify-between mb-8">
@@ -139,8 +171,8 @@ export default function EtudiantProfilePage() {
               {/* Photo et infos de base */}
               <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-200">
                 <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                  <Image 
-                    src="/img/profil-etudiant.jpg" 
+                  <Image
+                    src="/img/profil-etudiant.jpg"
                     alt="Sofia Lahnin"
                     width={80}
                     height={80}
@@ -148,7 +180,9 @@ export default function EtudiantProfilePage() {
                   />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{formData.fullName}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {formData.first_name} {formData.last_name}
+                  </h2>
                   <p className="text-sm text-gray-500">{formData.email}</p>
                 </div>
               </div>
@@ -164,7 +198,7 @@ export default function EtudiantProfilePage() {
                     <input
                       type="text"
                       value={formData.fullName}
-                      onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
@@ -193,7 +227,7 @@ export default function EtudiantProfilePage() {
                     <input
                       type="text"
                       value={formData.year}
-                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
@@ -212,7 +246,7 @@ export default function EtudiantProfilePage() {
                     <input
                       type="text"
                       value={formData.specialty}
-                      onChange={(e) => setFormData({...formData, specialty: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
@@ -231,7 +265,7 @@ export default function EtudiantProfilePage() {
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
@@ -250,7 +284,7 @@ export default function EtudiantProfilePage() {
                     <input
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
@@ -341,7 +375,7 @@ export default function EtudiantProfilePage() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
