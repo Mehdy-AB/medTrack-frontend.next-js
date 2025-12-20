@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import DashboardStats from './components/DashboardStats';
 import KpiCard from './components/KpiCard';
 import CustomChart from './components/CustomChart';
@@ -12,7 +12,7 @@ import ComparisonPanel from './components/ComparisonPanel';
 import ReportGenerator from './components/ReportGenerator';
 import ExportModal from './components/ExportModal';
 import HistoricalReports from './components/HistoricalReports';
-import { 
+import {
   periodesDisponibles,
   mockServicesStats,
   mockDonneesAnnonces,
@@ -24,12 +24,12 @@ import {
   ServiceStat,
   Rapport
 } from './models/statistiques.model';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Download, 
-  FileText, 
-  Filter, 
+import {
+  BarChart3,
+  TrendingUp,
+  Download,
+  FileText,
+  Filter,
   Calendar,
   Target,
   Users,
@@ -49,16 +49,16 @@ export default function PageStatistiquesRapports() {
   // Calcul des statistiques globales
   const statsGlobales = useMemo(() => {
     const servicesFiltres = mockServicesStats.filter(s => selectedServices.includes(s.id));
-    
+
     const annoncesTotal = servicesFiltres.reduce((acc, s) => acc + s.annoncesTotal, 0);
     const annoncesActives = servicesFiltres.reduce((acc, s) => acc + s.annoncesActives, 0);
     const candidaturesTotal = servicesFiltres.reduce((acc, s) => acc + s.candidaturesTotal, 0);
     const candidaturesAcceptees = servicesFiltres.reduce((acc, s) => acc + s.candidaturesAcceptees, 0);
-    
-    const tauxConversion = candidaturesTotal > 0 
-      ? (candidaturesAcceptees / candidaturesTotal) * 100 
+
+    const tauxConversion = candidaturesTotal > 0
+      ? (candidaturesAcceptees / candidaturesTotal) * 100
       : 0;
-    
+
     const tauxOccupation = servicesFiltres.reduce((acc, s) => acc + s.tauxOccupation, 0) / servicesFiltres.length;
     const satisfactionMoyenne = servicesFiltres.reduce((acc, s) => acc + s.satisfactionMoyenne, 0) / servicesFiltres.length;
 
@@ -90,9 +90,9 @@ export default function PageStatistiquesRapports() {
   // KPIs consolidés
   const kpisConsolides = useMemo(() => {
     const servicesFiltres = mockServicesStats.filter(s => selectedServices.includes(s.id));
-    
+
     const kpis = servicesFiltres.flatMap(s => s.kpis);
-    
+
     // Groupement par type de KPI
     const kpisGroupes = kpis.reduce((acc, kpi) => {
       if (!acc[kpi.nom]) {
@@ -103,10 +103,10 @@ export default function PageStatistiquesRapports() {
           historique: []
         };
       }
-      
+
       acc[kpi.nom].valeur += kpi.valeur / servicesFiltres.length;
       acc[kpi.nom].variation += kpi.variation / servicesFiltres.length;
-      
+
       return acc;
     }, {} as Record<string, any>);
 
@@ -114,58 +114,58 @@ export default function PageStatistiquesRapports() {
   }, [selectedServices]);
 
   // Métriques pour comparaison
- // Dans la page.tsx, modifiez la fonction metriquesComparaison :
+  // Dans la page.tsx, modifiez la fonction metriquesComparaison :
 
-const metriquesComparaison = useMemo(() => {
-  const calculateTendance = (actuel: number, precedent: number): 'hausse' | 'baisse' | 'stable' => {
-    if (actuel > precedent) return 'hausse';
-    if (actuel < precedent) return 'baisse';
-    return 'stable';
-  };
+  const metriquesComparaison = useMemo(() => {
+    const calculateTendance = (actuel: number, precedent: number): 'hausse' | 'baisse' | 'stable' => {
+      if (actuel > precedent) return 'hausse';
+      if (actuel < precedent) return 'baisse';
+      return 'stable';
+    };
 
-  return [
-    {
-      label: 'Annonces publiées',
-      valeurActuelle: statsGlobales.actuelle.annoncesTotal,
-      valeurComparaison: statsGlobales.precedente.annoncesTotal,
-      unite: '',
-      tendance: calculateTendance(
-        statsGlobales.actuelle.annoncesTotal,
-        statsGlobales.precedente.annoncesTotal
-      )
-    },
-    {
-      label: 'Candidatures totales',
-      valeurActuelle: statsGlobales.actuelle.candidaturesTotal,
-      valeurComparaison: statsGlobales.precedente.candidaturesTotal,
-      unite: '',
-      tendance: calculateTendance(
-        statsGlobales.actuelle.candidaturesTotal,
-        statsGlobales.precedente.candidaturesTotal
-      )
-    },
-    {
-      label: 'Taux de conversion',
-      valeurActuelle: statsGlobales.actuelle.tauxConversion,
-      valeurComparaison: statsGlobales.precedente.tauxConversion,
-      unite: '%',
-      tendance: calculateTendance(
-        statsGlobales.actuelle.tauxConversion,
-        statsGlobales.precedente.tauxConversion
-      )
-    },
-    {
-      label: 'Satisfaction moyenne',
-      valeurActuelle: statsGlobales.actuelle.satisfactionMoyenne,
-      valeurComparaison: statsGlobales.precedente.satisfactionMoyenne,
-      unite: '/5',
-      tendance: calculateTendance(
-        statsGlobales.actuelle.satisfactionMoyenne,
-        statsGlobales.precedente.satisfactionMoyenne
-      )
-    }
-  ];
-}, [statsGlobales]);
+    return [
+      {
+        label: 'Annonces publiées',
+        valeurActuelle: statsGlobales.actuelle.annoncesTotal,
+        valeurComparaison: statsGlobales.precedente.annoncesTotal,
+        unite: '',
+        tendance: calculateTendance(
+          statsGlobales.actuelle.annoncesTotal,
+          statsGlobales.precedente.annoncesTotal
+        )
+      },
+      {
+        label: 'Candidatures totales',
+        valeurActuelle: statsGlobales.actuelle.candidaturesTotal,
+        valeurComparaison: statsGlobales.precedente.candidaturesTotal,
+        unite: '',
+        tendance: calculateTendance(
+          statsGlobales.actuelle.candidaturesTotal,
+          statsGlobales.precedente.candidaturesTotal
+        )
+      },
+      {
+        label: 'Taux de conversion',
+        valeurActuelle: statsGlobales.actuelle.tauxConversion,
+        valeurComparaison: statsGlobales.precedente.tauxConversion,
+        unite: '%',
+        tendance: calculateTendance(
+          statsGlobales.actuelle.tauxConversion,
+          statsGlobales.precedente.tauxConversion
+        )
+      },
+      {
+        label: 'Satisfaction moyenne',
+        valeurActuelle: statsGlobales.actuelle.satisfactionMoyenne,
+        valeurComparaison: statsGlobales.precedente.satisfactionMoyenne,
+        unite: '/5',
+        tendance: calculateTendance(
+          statsGlobales.actuelle.satisfactionMoyenne,
+          statsGlobales.precedente.satisfactionMoyenne
+        )
+      }
+    ];
+  }, [statsGlobales]);
 
   // Handlers
   const handleGenerateReport = (config: any) => {
@@ -208,7 +208,7 @@ const metriquesComparaison = useMemo(() => {
       dateExport: new Date().toISOString()
     };
 
-    const content = config.format === 'json' 
+    const content = config.format === 'json'
       ? JSON.stringify(data, null, 2)
       : 'Export simulé - Fonctionnalité backend requise';
 
@@ -249,14 +249,14 @@ const metriquesComparaison = useMemo(() => {
   return (
     <>
       <NavbarEtablissement />
-      <Header 
-        spaceName="Statistiques & Rapports Avancés" 
-        notificationCount={0} 
+      <Header
+        spaceName="Statistiques & Rapports Avancés"
+        notificationCount={0}
       />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         <main className="flex-1 overflow-x-hidden">
           <div className="p-8">
             {/* En-tête */}
@@ -312,7 +312,7 @@ const metriquesComparaison = useMemo(() => {
 
             {/* Dashboard statistiques */}
             <div className="mb-8">
-              <DashboardStats 
+              <DashboardStats
                 periodesComparees={statsGlobales}
                 kpis={kpisConsolides}
               />
@@ -327,7 +327,7 @@ const metriquesComparaison = useMemo(() => {
                 hauteur={350}
                 onExport={handleChartExport}
               />
-              
+
               <CustomChart
                 titre="Candidatures par Service"
                 type="bar"
@@ -335,7 +335,7 @@ const metriquesComparaison = useMemo(() => {
                 hauteur={350}
                 onExport={handleChartExport}
               />
-              
+
               <CustomChart
                 titre="Performance Hebdomadaire"
                 type="line"
@@ -343,7 +343,7 @@ const metriquesComparaison = useMemo(() => {
                 hauteur={350}
                 onExport={handleChartExport}
               />
-              
+
               <CustomChart
                 titre="Satisfaction par Service"
                 type="pie"
@@ -362,7 +362,7 @@ const metriquesComparaison = useMemo(() => {
                   <span>{kpisConsolides.length} indicateurs suivis</span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {kpisConsolides.slice(0, 6).map((kpi, index) => (
                   <KpiCard key={index} kpi={kpi} />
@@ -426,7 +426,7 @@ const metriquesComparaison = useMemo(() => {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}

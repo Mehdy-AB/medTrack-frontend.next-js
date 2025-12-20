@@ -19,6 +19,7 @@ import ConfirmationModal from './components/ConfirmationModal';
 
 interface ApplicationFilters {
   status: string;
+  [key: string]: string;
 }
 
 export default function CandidaturesPage() {
@@ -26,7 +27,7 @@ export default function CandidaturesPage() {
   const [applications, setApplications] = useState<any[]>([]); // Using any for flexible backend response
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
@@ -126,7 +127,7 @@ export default function CandidaturesPage() {
   };
 
   // Table columns
-  const columns: Column<Application>[] = [
+  const columns: Column<any>[] = [
     {
       key: 'student',
       header: 'Étudiant',

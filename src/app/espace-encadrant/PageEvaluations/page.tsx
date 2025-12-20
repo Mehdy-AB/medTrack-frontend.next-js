@@ -19,6 +19,7 @@ import SuccessModal from './components/SuccessModal';
 
 interface EvaluationFilters {
   status: string;
+  [key: string]: string;
 }
 
 export default function EvaluationsPage() {
@@ -26,7 +27,7 @@ export default function EvaluationsPage() {
   const [evaluations, setEvaluations] = useState<any[]>([]); // Using any for flexible response
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -112,7 +113,7 @@ export default function EvaluationsPage() {
   };
 
   // Table columns
-  const columns: Column<Evaluation>[] = [
+  const columns: Column<any>[] = [
     {
       key: 'student',
       header: 'Étudiant',

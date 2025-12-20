@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 
-export default function LoginForm() {
+interface LoginFormProps {
+  role?: 'etudiant' | 'encadrant' | 'admin' | 'etablissement';
+}
+
+export default function LoginForm({ role }: LoginFormProps = {}) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

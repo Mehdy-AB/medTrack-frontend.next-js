@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import NavbarEtablissement from './components/NavbarEtablissement';
+import NavbarEtablissement from './Components/NavbarEtablissement';
 import Header from '../Components/HeaderProps';
 import Footer from '../Components/Footer';
-import SidebarEtablissement from './components/SidebarEtablissement';
-import KPICard from './components/KPICard';
-import ChartKPIs from './components/ChartKPIs';
-import TendancesChart from './components/TendancesChart';
-import AlertesUrgentes from './components/AlertesUrgentes';
-import TableServices from './components/TableServices';
-import FilterTableauBord from './components/FilterTableauBord';
-import MessageGlobalModal from './components/MessageGlobalModal';
-import { 
-  mockServices, 
-  mockKPIs, 
-  mockTendances, 
+import SidebarEtablissement from './Components/SidebarEtablissement';
+import KPICard from './Components/KPICard';
+import ChartKPIs from './Components/ChartKPIs';
+import TendancesChart from './Components/TendancesChart';
+import AlertesUrgentes from './Components/AlertesUrgentes';
+import TableServices from './Components/TableServices';
+import FilterTableauBord from './Components/FilterTableauBord';
+import MessageGlobalModal from './Components/MessageGlobalModal';
+import {
+  mockServices,
+  mockKPIs,
+  mockTendances,
   mockAlertes,
   ServiceData,
   Alerte
@@ -31,11 +31,11 @@ export default function TableauBordEtablissementPage() {
   // Filtrer les services selon les filtres
   const filteredServices = useMemo(() => {
     let result = [...services];
-    
+
     if (filters.statut) {
       result = result.filter(service => service.statut === filters.statut.toLowerCase().replace('-', ''));
     }
-    
+
     return result;
   }, [services, filters]);
 
@@ -43,7 +43,7 @@ export default function TableauBordEtablissementPage() {
   const globalKPIs = useMemo(() => {
     const totalCandidatures = services.reduce((sum, s) => sum + s.candidaturesAttente, 0);
     const urgentCandidatures = services.filter(s => s.candidaturesAttente > 10).length;
-    
+
     return {
       totalCandidatures,
       urgentCandidatures,
@@ -62,7 +62,7 @@ export default function TableauBordEtablissementPage() {
 
   const handleExport = () => {
     setExporting(true);
-    
+
     // Simuler l'export
     setTimeout(() => {
       const data = {
@@ -72,7 +72,7 @@ export default function TableauBordEtablissementPage() {
         alertes: alertes,
         dateExport: new Date().toISOString()
       };
-      
+
       const content = JSON.stringify(data, null, 2);
       const blob = new Blob([content], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -81,7 +81,7 @@ export default function TableauBordEtablissementPage() {
       a.download = `rapport_etablissement_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      
+
       setExporting(false);
       alert('Rapport exporté avec succès !');
     }, 1000);
@@ -100,10 +100,10 @@ export default function TableauBordEtablissementPage() {
     <>
       <NavbarEtablissement />
       <Header spaceName="Espace Établissement" notificationCount={globalKPIs.urgentCandidatures} />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         {/* Contenu principal */}
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
@@ -115,7 +115,7 @@ export default function TableauBordEtablissementPage() {
               <p className="text-gray-600">
                 Vision stratégique complète de l&apos;activité de formation
               </p>
-              
+
               {/* Indicateurs urgents */}
               <div className="flex gap-4 mt-4">
                 {globalKPIs.totalCandidatures > 20 && (
@@ -138,7 +138,7 @@ export default function TableauBordEtablissementPage() {
 
             {/* Filtres */}
             <div className="mb-6">
-              <FilterTableauBord 
+              <FilterTableauBord
                 onFilterChange={handleFilterChange}
                 onExport={handleExport}
                 onMessageGlobal={() => setShowMessageModal(true)}
@@ -162,8 +162,8 @@ export default function TableauBordEtablissementPage() {
             {/* Alertes et Tableau */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
               <div className="lg:col-span-1">
-                <AlertesUrgentes 
-                  alertes={alertes} 
+                <AlertesUrgentes
+                  alertes={alertes}
                   onResolve={handleResolveAlerte}
                 />
               </div>
@@ -182,7 +182,7 @@ export default function TableauBordEtablissementPage() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}

@@ -6,7 +6,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
     student: ["/espace-etudiant"],
     encadrant: ["/espace-encadrant"],
     admin: ["/espace-etudiant", "/espace-encadrant", "/espace-etablissement", "/tableau-de-bord"],
-    etablissement: ["/espace-etablissement"],
+    establishment: ["/espace-etablissement"],
 }
 
 export default withAuth(

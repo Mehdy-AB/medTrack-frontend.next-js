@@ -1,4 +1,12 @@
 import api from '@/lib/axios'
+import {
+    mockOffer,
+    mockApplication,
+    mockAffectation,
+    mockPaginatedResponse,
+    mockAxiosResponse,
+    delay
+} from '@/mocks/mockData'
 import type {
     Offer,
     OfferWithDetails,
@@ -16,74 +24,98 @@ const CORE_BASE = '/core'
 
 export const coreApi = {
     // Offers
-    listOffers: (params?: {
+    listOffers: async (params?: {
         status?: string;
         service_id?: string;
         establishment_id?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<OfferWithDetails>>(`${CORE_BASE}/offers/`, { params }),
+    }) => {
+        return api.get('/api/mock/offers', { baseURL: '' });
+    },
 
-    getOffer: (id: string) =>
-        api.get<OfferWithDetails>(`${CORE_BASE}/offers/${id}/`),
+    getOffer: async (id: string) => {
+        const res = await api.get('/api/mock/offers', { baseURL: '' });
+        const offer = res.data.data.find((o: any) => o.id === id) || mockOffer;
+        return mockAxiosResponse(offer);
+    },
 
-    createOffer: (data: CreateOfferRequest) =>
-        api.post<Offer>(`${CORE_BASE}/offers/`, data),
+    createOffer: async (data: CreateOfferRequest) => {
+        return api.post('/api/mock/offers', data, { baseURL: '' });
+    },
 
-    updateOffer: (id: string, data: Partial<CreateOfferRequest>) =>
-        api.patch<Offer>(`${CORE_BASE}/offers/${id}/`, data),
+    updateOffer: async (id: string, data: Partial<CreateOfferRequest>) => {
+        return api.put(`/api/mock/offers/${id}`, data, { baseURL: '' });
+    },
 
-    deleteOffer: (id: string) =>
-        api.delete(`${CORE_BASE}/offers/${id}/`),
+    deleteOffer: async (id: string) => {
+        return api.delete(`/api/mock/offers/${id}`, { baseURL: '' });
+    },
 
-    publishOffer: (id: string) =>
-        api.post(`${CORE_BASE}/offers/${id}/publish/`),
+    publishOffer: async (id: string) => {
+        return api.put(`/api/mock/offers/${id}`, { status: 'published' }, { baseURL: '' });
+    },
 
-    closeOffer: (id: string) =>
-        api.post(`${CORE_BASE}/offers/${id}/close/`),
+    closeOffer: async (id: string) => {
+        return api.put(`/api/mock/offers/${id}`, { status: 'closed' }, { baseURL: '' });
+    },
 
     // Applications
-    listApplications: (params?: {
+    listApplications: async (params?: {
         offer_id?: string;
         student_id?: string;
         status?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<ApplicationWithDetails>>(`${CORE_BASE}/applications/`, { params }),
+    }) => {
+        return api.get('/api/mock/applications', { baseURL: '' });
+    },
 
-    getApplication: (id: string) =>
-        api.get<ApplicationWithDetails>(`${CORE_BASE}/applications/${id}/`),
+    getApplication: async (id: string) => {
+        const res = await api.get('/api/mock/applications', { baseURL: '' });
+        const application = res.data.data.find((a: any) => a.id === id) || mockApplication;
+        return mockAxiosResponse(application);
+    },
 
-    createApplication: (data: CreateApplicationRequest) =>
-        api.post<Application>(`${CORE_BASE}/applications/`, data),
+    createApplication: async (data: CreateApplicationRequest) => {
+        return api.post('/api/mock/applications', data, { baseURL: '' });
+    },
 
-    updateApplicationStatus: (id: string, data: UpdateApplicationStatusRequest) =>
-        api.patch<Application>(`${CORE_BASE}/applications/${id}/`, data),
+    updateApplicationStatus: async (id: string, data: UpdateApplicationStatusRequest) => {
+        return api.put(`/api/mock/applications/${id}`, data, { baseURL: '' });
+    },
 
-    cancelApplication: (id: string) =>
-        api.post(`${CORE_BASE}/applications/${id}/cancel/`),
+    cancelApplication: async (id: string) => {
+        return api.put(`/api/mock/applications/${id}`, { status: 'cancelled' }, { baseURL: '' });
+    },
 
     // My Applications (for students)
-    getMyApplications: () =>
-        api.get<ApplicationWithDetails[]>(`${CORE_BASE}/applications/my/`),
+    getMyApplications: async () => {
+        const res = await api.get('/api/mock/applications', { baseURL: '' });
+        return mockAxiosResponse(res.data.data || []);
+    },
 
     // Affectations
-    listAffectations: (params?: {
+    listAffectations: async (params?: {
         offer_id?: string;
         student_id?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<AffectationWithDetails>>(`${CORE_BASE}/affectations/`, { params }),
+    }) => {
+        return api.get('/api/mock/affectations', { baseURL: '' });
+    },
 
-    getAffectation: (id: string) =>
-        api.get<AffectationWithDetails>(`${CORE_BASE}/affectations/${id}/`),
+    getAffectation: async (id: string) => {
+        const res = await api.get('/api/mock/affectations', { baseURL: '' });
+        const affectation = res.data.data.find((a: any) => a.id === id) || mockAffectation;
+        return mockAxiosResponse(affectation);
+    },
 
     // My Affectations (for students)
-    getMyAffectations: () =>
-        api.get<AffectationWithDetails[]>(`${CORE_BASE}/affectations/my/`),
+    getMyAffectations: async () => {
+        const res = await api.get('/api/mock/affectations', { baseURL: '' });
+        return mockAxiosResponse(res.data.data || []);
+    },
 }
 
 export default coreApi

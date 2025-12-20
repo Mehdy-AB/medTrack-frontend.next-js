@@ -197,13 +197,16 @@ export default function EtudiantProfilePage() {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      value={`${formData.first_name} ${formData.last_name}`}
+                      onChange={(e) => {
+                        const names = e.target.value.split(' ');
+                        setFormData({ ...formData, first_name: names[0] || '', last_name: names.slice(1).join(' ') || '' });
+                      }}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   ) : (
                     <div className="text-base text-gray-800 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
-                      {formData.fullName}
+                      {`${formData.first_name} ${formData.last_name}`}
                     </div>
                   )}
                 </div>

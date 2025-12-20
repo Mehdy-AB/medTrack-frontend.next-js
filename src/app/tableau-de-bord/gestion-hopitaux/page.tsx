@@ -19,6 +19,7 @@ import type { Establishment } from '@/types/api.types';
 interface EstablishmentFilters {
   type: string;
   wilaya: string;
+  [key: string]: string | number | boolean | string[] | undefined;
 }
 
 const INITIAL_FILTERS: EstablishmentFilters = {
@@ -96,7 +97,7 @@ export default function GestionHopitaux() {
   }, [fetchEstablishments]);
 
   // Stats
-  const activeCount = establishments.filter(e => e.is_active !== false).length;
+  const activeCount = establishments.filter(e => (e as any).is_active !== false).length;
   const totalServicesCount = establishments.length; // Would need API for real count
 
   // Table columns

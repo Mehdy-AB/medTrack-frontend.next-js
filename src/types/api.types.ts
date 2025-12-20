@@ -2,7 +2,7 @@
 // AUTH-SERVICE TYPES
 // =============================================================================
 
-export type AuthRole = 'admin' | 'student' | 'encadrant';
+export type AuthRole = 'admin' | 'student' | 'encadrant' | 'establishment';
 
 // Request Types
 export interface LoginRequest {
@@ -650,6 +650,7 @@ export interface ApiResponse<T> {
 
 export interface PaginatedResponse<T> {
     data: T[];
+    results?: T[]; // For DRF compatibility
     total: number;
     page: number;
     per_page: number;

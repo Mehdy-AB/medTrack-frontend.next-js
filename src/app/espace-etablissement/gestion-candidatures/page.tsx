@@ -3,25 +3,25 @@
 import { useState, useMemo } from 'react';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import CandidatureCard from './components/CandidatureCard';
 import CandidatureTable from './components/CandidatureTable';
 import FilterCandidatures from './components/FilterCandidatures';
 import PreValidationModal from './components/PreValidationModal';
 import TransmissionModal from './components/TransmissionModal';
-import { 
-  mockCandidatures, 
-  mockServices, 
+import {
+  mockCandidatures,
+  mockServices,
   FiltresCandidatures,
   Candidature
 } from './models/candidature.model';
-import { 
-  Users, 
-  FileText, 
-  CheckCircle, 
-  Send, 
-  Clock, 
+import {
+  Users,
+  FileText,
+  CheckCircle,
+  Send,
+  Clock,
   TrendingUp,
   Download,
   Eye,
@@ -90,7 +90,7 @@ export default function PageGestionCandidatures() {
     // Filtre par date
     if (filtres.dateDebut) {
       const dateDebut = new Date(filtres.dateDebut);
-      result = result.filter(candidature => 
+      result = result.filter(candidature =>
         new Date(candidature.dateSoumission) >= dateDebut
       );
     }
@@ -98,7 +98,7 @@ export default function PageGestionCandidatures() {
     if (filtres.dateFin) {
       const dateFin = new Date(filtres.dateFin);
       dateFin.setHours(23, 59, 59, 999);
-      result = result.filter(candidature => 
+      result = result.filter(candidature =>
         new Date(candidature.dateSoumission) <= dateFin
       );
     }
@@ -114,14 +114,14 @@ export default function PageGestionCandidatures() {
     const transmises = candidatures.filter(c => c.statut === 'transmise_service').length;
     const acceptees = candidatures.filter(c => c.statut === 'acceptee_chef').length;
     const refusees = candidatures.filter(c => c.statut === 'refusee_chef').length;
-    
-    const documentsValides = candidatures.reduce((acc, c) => 
+
+    const documentsValides = candidatures.reduce((acc, c) =>
       acc + c.documents.filter(d => d.statut === 'valide').length, 0
     );
     const documentsTotal = candidatures.reduce((acc, c) => acc + c.documents.length, 0);
-    
-    const candidaturesUrgentes = candidatures.filter(c => 
-      c.statut === 'en_attente' && 
+
+    const candidaturesUrgentes = candidatures.filter(c =>
+      c.statut === 'en_attente' &&
       (new Date().getTime() - new Date(c.dateSoumission).getTime()) > 3 * 24 * 60 * 60 * 1000 // > 3 jours
     ).length;
 
@@ -218,7 +218,7 @@ export default function PageGestionCandidatures() {
   };
 
   const handlePreValidateMultiple = () => {
-    const candidaturesToValidate = filteredCandidatures.filter(c => 
+    const candidaturesToValidate = filteredCandidatures.filter(c =>
       selectedCandidatures.includes(c.id) && c.statut === 'en_attente'
     );
 
@@ -298,14 +298,14 @@ export default function PageGestionCandidatures() {
   return (
     <>
       <NavbarEtablissement />
-      <Header 
-        spaceName="Espace Établissement" 
-        notificationCount={stats.enAttente + stats.candidaturesUrgentes} 
+      <Header
+        spaceName="Espace Établissement"
+        notificationCount={stats.enAttente + stats.candidaturesUrgentes}
       />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         <main className="flex-1 overflow-x-hidden">
           <div className="p-8">
             {/* En-tête avec statistiques */}
@@ -461,26 +461,24 @@ export default function PageGestionCandidatures() {
                   Workflow: En attente → Pré-validée → Transmise → Acceptée/Refusée
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
                   <button
                     onClick={() => setViewMode('cards')}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      viewMode === 'cards'
-                        ? 'bg-white text-gray-900 shadow'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'cards'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     Cartes
                   </button>
                   <button
                     onClick={() => setViewMode('table')}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      viewMode === 'table'
-                        ? 'bg-white text-gray-900 shadow'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'table'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     Tableau
                   </button>
@@ -610,7 +608,7 @@ export default function PageGestionCandidatures() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}

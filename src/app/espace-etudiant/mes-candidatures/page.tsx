@@ -7,10 +7,10 @@ import Footer from '../../Components/Footer';
 import SidebarEtudiant from '../Components/SidebarEtudiant';
 import { FileCheck, Calendar, MapPin, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { coreApi } from '@/services';
-import type { Application } from '@/types/api.types';
+
 
 export default function MesCandidaturesPage() {
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

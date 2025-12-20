@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
 import { Building, Mail, Phone, MapPin, Hash, Save, Upload } from 'lucide-react';
 
 export default function ParametresEtablissementPage() {
@@ -76,10 +76,10 @@ export default function ParametresEtablissementPage() {
     <div className="min-h-screen flex flex-col">
       <NavbarEtablissement />
       <Header spaceName="Paramètres de l'Établissement" notificationCount={0} />
-      
+
       <div className="flex flex-1">
         <SidebarEtablissement />
-        
+
         <main className="flex-1 p-8 bg-gray-50">
           <div className="max-w-4xl mx-auto">
             {/* En-tête */}
@@ -100,11 +100,10 @@ export default function ParametresEtablissementPage() {
 
               {/* Message de feedback */}
               {message && (
-                <div className={`p-4 rounded-xl mb-6 ${
-                  message.type === 'success' 
-                    ? 'bg-green-50 border border-green-200 text-green-800' 
-                    : 'bg-red-50 border border-red-200 text-red-800'
-                }`}>
+                <div className={`p-4 rounded-xl mb-6 ${message.type === 'success'
+                  ? 'bg-green-50 border border-green-200 text-green-800'
+                  : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}>
                   <div className="flex items-center gap-2">
                     {message.type === 'success' ? (
                       <span className="text-green-600">✓</span>
@@ -124,7 +123,7 @@ export default function ParametresEtablissementPage() {
                   <Upload className="w-5 h-5" />
                   Logo de l'Établissement
                 </h2>
-                
+
                 <div className="flex items-start gap-8">
                   <div className="flex-shrink-0">
                     <div className="relative">
@@ -137,13 +136,13 @@ export default function ParametresEtablissementPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-4">
-                      Téléchargez le logo officiel de votre établissement. 
+                      Téléchargez le logo officiel de votre établissement.
                       Il sera affiché sur tous les documents et interfaces.
                     </p>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -153,7 +152,7 @@ export default function ParametresEtablissementPage() {
                           JPG, PNG (max 2MB)
                         </p>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Recommandations
@@ -173,7 +172,7 @@ export default function ParametresEtablissementPage() {
                           </li>
                         </ul>
                       </div>
-                      
+
                       <div>
                         <label className="block">
                           <div className="mt-2">
@@ -201,7 +200,7 @@ export default function ParametresEtablissementPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Informations de l'Établissement
                 </h2>
-                
+
                 <div className="space-y-6">
                   {/* Nom de l'établissement */}
                   <div>
@@ -289,11 +288,10 @@ export default function ParametresEtablissementPage() {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className={`px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all ${
-                      saving
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-teal-500 text-white hover:bg-teal-600 shadow-sm hover:shadow'
-                    }`}
+                    className={`px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all ${saving
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-teal-500 text-white hover:bg-teal-600 shadow-sm hover:shadow'
+                      }`}
                   >
                     <Save className="w-5 h-5" />
                     {saving ? 'Sauvegarde en cours...' : 'Sauvegarder les modifications'}
@@ -343,7 +341,7 @@ export default function ParametresEtablissementPage() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
     </div>
   );

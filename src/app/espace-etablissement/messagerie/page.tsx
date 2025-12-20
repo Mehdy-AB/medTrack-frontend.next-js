@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
 import { MessageSquare, Clock, Building2, Calendar, ChevronRight, Mail, Send, Inbox, Archive, AlertCircle, Users, FileText, Bell } from 'lucide-react';
 
 export default function MessagerieEtablissement() {
@@ -49,8 +49,8 @@ export default function MessagerieEtablissement() {
                   <button
                     onClick={() => setActiveTab('inbox')}
                     className={`flex items-center gap-2 px-6 py-4 font-medium ${activeTab === 'inbox'
-                        ? 'text-teal-600 border-b-2 border-teal-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-teal-600 border-b-2 border-teal-600'
+                      : 'text-gray-500 hover:text-gray-700'
                       }`}
                   >
                     <Inbox className="w-5 h-5" />
@@ -63,8 +63,8 @@ export default function MessagerieEtablissement() {
                   <button
                     onClick={() => setActiveTab('sent')}
                     className={`flex items-center gap-2 px-6 py-4 font-medium ${activeTab === 'sent'
-                        ? 'text-teal-600 border-b-2 border-teal-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-teal-600 border-b-2 border-teal-600'
+                      : 'text-gray-500 hover:text-gray-700'
                       }`}
                   >
                     <Send className="w-5 h-5" />
@@ -74,8 +74,8 @@ export default function MessagerieEtablissement() {
                   <button
                     onClick={() => setActiveTab('archived')}
                     className={`flex items-center gap-2 px-6 py-4 font-medium ${activeTab === 'archived'
-                        ? 'text-teal-600 border-b-2 border-teal-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-teal-600 border-b-2 border-teal-600'
+                      : 'text-gray-500 hover:text-gray-700'
                       }`}
                   >
                     <Archive className="w-5 h-5" />

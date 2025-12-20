@@ -8,7 +8,7 @@ import SidebarEtudiant from '../Components/SidebarEtudiant';
 import { MapPin, User, Calendar, RefreshCw } from 'lucide-react';
 import DataTable, { Column } from '../../Components/DataTable'; // Assuming I can reuse DataTable or similar table structure, or I'll just build simple tables as in design
 import { coreApi, evalApi } from '@/services';
-import type { Application, Attendance, Evaluation } from '@/types/api.types';
+import type { Application, Evaluation } from '@/types/api.types';
 import { useSession } from 'next-auth/react';
 
 export default function MonStagePage() {
@@ -56,7 +56,7 @@ export default function MonStagePage() {
   }, [fetchData]);
 
   // Columns for Presences (simplified)
-  const presenceColumns: Column<Attendance>[] = [
+  const presenceColumns: Column<any>[] = [
     { key: 'date', header: 'Date', render: (i) => i.date ? new Date(i.date).toLocaleDateString() : '-' },
     {
       key: 'status', header: 'Statut', render: (i) => (
@@ -72,9 +72,9 @@ export default function MonStagePage() {
 
   // Columns for Evaluations
   const evalColumns: Column<Evaluation>[] = [
-    { key: 'evaluator', header: 'Évaluateur', render: (i) => i.encadrant_id || 'Encadrant' },
-    { key: 'date', header: 'Date', render: (i) => i.evaluation_date ? new Date(i.evaluation_date).toLocaleDateString() : '-' },
-    { key: 'score', header: 'Note', render: (i) => <span className="font-bold">{i.average_score}/20</span> },
+    { key: 'evaluator', header: 'Évaluateur', render: (i) => i.evaluator_id || 'Encadrant' },
+    { key: 'date', header: 'Date', render: (i) => i.submitted_at ? new Date(i.submitted_at).toLocaleDateString() : '-' },
+    { key: 'score', header: 'Note', render: (i) => <span className="font-bold">{i.grade}/20</span> },
   ];
 
   if (loading) {

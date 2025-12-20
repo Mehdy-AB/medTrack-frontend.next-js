@@ -53,23 +53,23 @@ export default function MesEvaluationsPage() {
   const completedCount = evaluations.filter(e => e.status === 'completed').length;
 
   const columns: Column<Evaluation>[] = [
-    { key: 'date', header: 'Date', render: (i) => i.evaluation_date ? new Date(i.evaluation_date).toLocaleDateString() : '-' },
-    { key: 'evaluator', header: 'Évaluateur', render: (i) => i.encadrant_id || '-' }, // Ideally fetch name
+    { key: 'date', header: 'Date', render: (i) => i.submitted_at ? new Date(i.submitted_at).toLocaleDateString() : '-' },
+    { key: 'evaluator', header: 'Évaluateur', render: (i) => i.evaluator_id || '-' }, // Ideally fetch name
     {
       key: 'criteria', header: 'Critères', render: (i) => (
         <div className="text-xs text-gray-500 max-w-xs truncate">
-          {i.criteres ? JSON.stringify(i.criteres) : '-'}
+          {i.metadata ? JSON.stringify(i.metadata) : '-'}
         </div>
       )
     },
     {
       key: 'comment', header: 'Appréciation', render: (i) => (
-        <div className="text-sm italic text-gray-600 max-w-xs truncate">{i.commentaire || '-'}</div>
+        <div className="text-sm italic text-gray-600 max-w-xs truncate">{i.comments || '-'}</div>
       )
     },
     {
       key: 'score', header: 'Note', render: (i) => (
-        <span className="font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">{i.average_score || '-'}/20</span>
+        <span className="font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">{i.grade || '-'}/20</span>
       )
     },
   ];

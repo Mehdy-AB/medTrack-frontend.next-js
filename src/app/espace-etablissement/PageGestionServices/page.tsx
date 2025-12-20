@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import ServiceCard from './components/ServiceCard';
 import TableServicesGestion from './components/TableServicesGestion';
 import AjoutServiceModal from './components/AjoutServiceModal';
@@ -12,10 +12,10 @@ import ServiceDetailModal from './components/ServiceDetailModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import FilterServices from './components/FilterServices';
 import SearchBarServices from './components/SearchBarServices';
-import { 
-  mockServices, 
-  mockChefsService, 
-  ServiceHospitalier, 
+import {
+  mockServices,
+  mockChefsService,
+  ServiceHospitalier,
   ChefService,
   ConfigService,
   typeStagesOptions,
@@ -148,13 +148,13 @@ export default function PageGestionServices() {
           ...updates,
           dateModification: new Date().toISOString().split('T')[0]
         };
-        
+
         // Vérifier si le chef de service a changé
         if (updates.chefServiceId && updates.chefServiceId !== service.chefServiceId) {
           const chef = mockChefsService.find(c => c.id === updates.chefServiceId);
           alert(`Notification envoyée à ${chef?.nom} pour son affectation comme chef de service`);
         }
-        
+
         return updated;
       }
       return service;
@@ -204,10 +204,10 @@ export default function PageGestionServices() {
     <>
       <NavbarEtablissement />
       <Header spaceName="Espace Établissement" notificationCount={stats.sansChef} />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         {/* Contenu principal */}
         <main className="flex-1 overflow-x-hidden">
           <div className="p-8">
@@ -262,10 +262,9 @@ export default function PageGestionServices() {
                   <div className="mt-4">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${
-                          stats.tauxOccupationGlobal < 70 ? 'bg-green-500' :
+                        className={`h-full ${stats.tauxOccupationGlobal < 70 ? 'bg-green-500' :
                           stats.tauxOccupationGlobal <= 90 ? 'bg-orange-500' : 'bg-red-500'
-                        }`}
+                          }`}
                         style={{ width: `${Math.min(stats.tauxOccupationGlobal, 100)}%` }}
                       />
                     </div>
@@ -387,7 +386,7 @@ export default function PageGestionServices() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}
@@ -397,7 +396,7 @@ export default function PageGestionServices() {
           setShowAddModal(false);
           setSelectedService(null);
         }}
-        onSave={selectedService ? 
+        onSave={selectedService ?
           (config) => handleUpdateService(selectedService.id, {
             nom: config.nom,
             code: config.code,
@@ -407,7 +406,7 @@ export default function PageGestionServices() {
             capaciteMax: config.capaciteMax,
             typeStages: config.typeStages,
             specialitesAssociees: config.specialitesAssociees
-          }) : 
+          }) :
           handleAddService
         }
         chefsService={mockChefsService}

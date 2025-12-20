@@ -13,11 +13,26 @@ import Pagination from '../../Components/Pagination';
 import { RefreshCw, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
 import { evalApi } from '@/services';
 import { usePagination, useFilters } from '@/hooks';
-import type { Attendance, StudentWithUser } from '@/types/api.types';
+import type { StudentWithUser } from '@/types/api.types';
 
 interface AttendanceFilters {
   status: string;
   date: string;
+  [key: string]: string | number | boolean | string[] | undefined;
+}
+
+interface Attendance {
+  id: string;
+  student_id: string;
+  date: string;
+  status: 'present' | 'absent' | 'late' | 'excused';
+  student?: {
+    student_number?: string;
+    user?: {
+      first_name?: string;
+      last_name?: string;
+    };
+  };
 }
 
 export default function PresencesPage() {
@@ -83,15 +98,21 @@ export default function PresencesPage() {
         // Create new
         await evalApi.markAttendance({
           student_id: item.student_id,
+          offer_id: 'offer-1', // TODO: Get actual offer_id from context
           date: filters.date,
-          status: newStatus,
+          is_present: newStatus === 'present',
+          justified: newStatus === 'excused',
+          justification_reason: newStatus === 'excused' ? 'Excused absence' : undefined,
         });
       } else {
         // Update existing (if API supports it, otherwise create for that day overwrites)
         await evalApi.markAttendance({
           student_id: item.student_id,
+          offer_id: 'offer-1', // TODO: Get actual offer_id from context
           date: filters.date,
-          status: newStatus,
+          is_present: newStatus === 'present',
+          justified: newStatus === 'excused',
+          justification_reason: newStatus === 'excused' ? 'Excused absence' : undefined,
         });
       }
 

@@ -15,6 +15,7 @@ import type { Offer } from '@/types/api.types';
 interface OfferFilters {
   specialty: string;
   status: string;
+  [key: string]: string | number | boolean | string[] | undefined;
 }
 
 export default function AnnoncesStagesPage() {

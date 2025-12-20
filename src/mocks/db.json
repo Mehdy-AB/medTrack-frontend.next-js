@@ -1,0 +1,209 @@
+{
+  "students": [
+    {
+      "id": "stu-1",
+      "user_id": "user-1",
+      "student_number": "ST12345",
+      "date_of_birth": "2000-01-01",
+      "university": "Algiers University 1",
+      "program": "Medicine",
+      "year_level": 5,
+      "first_name": "Johne",
+      "last_name": "Doe",
+      "email": "student@example.com",
+      "phone": "123456789",
+      "extra": null,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2025-12-20T16:18:49.811Z",
+      "user_data": {
+        "id": "user-1",
+        "email": "student@example.com",
+        "first_name": "Johne",
+        "last_name": "Doe",
+        "phone": "123456789"
+      }
+    }
+  ],
+  "establishments": [
+    {
+      "id": "est-1",
+      "code": "CHU-ALG",
+      "name": "CHU Alger",
+      "type": "Hospital",
+      "address": "Place du 1er Mai",
+      "city": "Algiers",
+      "wilaya": "Algiers",
+      "email": "etablissement@example.com",
+      "phone": "021234567",
+      "metadata": null,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "admins": [
+    {
+      "id": "user-3",
+      "email": "admin@example.com",
+      "first_name": "Admin",
+      "last_name": "User",
+      "phone": "000000000",
+      "role": "admin",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "encadrants": [
+    {
+      "id": "enc-1",
+      "user_id": "user-2",
+      "establishment_id": "est-1",
+      "service_id": "svc-1",
+      "position": "Chief Resident",
+      "speciality": "Cardiology",
+      "cin": "123456789012345",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "encadrant@example.com",
+      "phone": "987654321",
+      "contact": {
+        "phone": "987654321"
+      },
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z",
+      "user": {
+        "id": "user-2",
+        "email": "encadrant@example.com",
+        "first_name": "Jane",
+        "last_name": "Smith"
+      }
+    }
+  ],
+  "services": [
+    {
+      "id": "svc-1",
+      "establishment_id": "est-1",
+      "name": "Cardiology",
+      "description": "Heart diseases department",
+      "capacity": 10,
+      "metadata": null,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "offers": [
+    {
+      "id": "offer-1",
+      "establishment_id": "est-1",
+      "service_id": "svc-1",
+      "title": "Stage en Cardiologie",
+      "description": "Stage d'observation et de pratique en cardiologie au CHU Alger. Les étudiants auront l'opportunité de participer aux consultations, examens et interventions sous supervision.",
+      "requirements": "Étudiant en 4ème ou 5ème année de médecine",
+      "duration_weeks": 4,
+      "start_date": "2025-02-01",
+      "end_date": "2025-02-28",
+      "max_students": 5,
+      "current_applications": 2,
+      "status": "published",
+      "created_at": "2024-12-15T00:00:00.000Z",
+      "updated_at": "2024-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "offer-2",
+      "establishment_id": "est-1",
+      "service_id": "svc-1",
+      "title": "Stage en Médecine Interne",
+      "description": "Stage pratique en médecine interne avec rotation dans différents services. Formation complète incluant diagnostic, traitement et suivi des patients.",
+      "requirements": "Étudiant en 5ème année minimum",
+      "duration_weeks": 6,
+      "start_date": "2025-03-01",
+      "end_date": "2025-04-15",
+      "max_students": 3,
+      "current_applications": 1,
+      "status": "published",
+      "created_at": "2024-12-10T00:00:00.000Z",
+      "updated_at": "2024-12-10T00:00:00.000Z"
+    },
+    {
+      "id": "offer-3",
+      "establishment_id": "est-1",
+      "service_id": "svc-1",
+      "title": "Stage en Urgences",
+      "description": "Stage intensif au service des urgences. Expérience pratique en gestion des cas urgents, triage et soins d'urgence.",
+      "requirements": "Étudiant en 4ème année minimum, bonne résistance au stress",
+      "duration_weeks": 3,
+      "start_date": "2025-01-15",
+      "end_date": "2025-02-05",
+      "max_students": 4,
+      "current_applications": 3,
+      "status": "published",
+      "created_at": "2024-12-01T00:00:00.000Z",
+      "updated_at": "2024-12-01T00:00:00.000Z"
+    }
+  ],
+  "applications": [],
+  "affectations": [],
+  "attendance": [],
+  "evaluations": [
+    {
+      "id": "eval-1",
+      "student_id": "stu-1",
+      "offer_id": "offer-1",
+      "evaluator_id": "enc-1",
+      "type": "midterm",
+      "score": 85,
+      "comments": "Excellent travail, très motivé et impliqué dans les soins aux patients. Bonne capacité d'analyse.",
+      "skills": {
+        "clinical_knowledge": 90,
+        "practical_skills": 80,
+        "communication": 85,
+        "professionalism": 90
+      },
+      "validated": true,
+      "validated_at": "2024-12-15T00:00:00.000Z",
+      "created_at": "2024-12-10T00:00:00.000Z",
+      "updated_at": "2024-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "eval-2",
+      "student_id": "stu-1",
+      "offer_id": "offer-2",
+      "evaluator_id": "enc-1",
+      "type": "final",
+      "score": 88,
+      "comments": "Progression remarquable durant le stage. Excellente maîtrise des procédures et bon esprit d'équipe.",
+      "skills": {
+        "clinical_knowledge": 85,
+        "practical_skills": 90,
+        "communication": 88,
+        "professionalism": 90
+      },
+      "validated": false,
+      "validated_at": null,
+      "created_at": "2024-12-18T00:00:00.000Z",
+      "updated_at": "2024-12-18T00:00:00.000Z"
+    },
+    {
+      "id": "eval-3",
+      "student_id": "stu-1",
+      "offer_id": "offer-3",
+      "evaluator_id": "enc-1",
+      "type": "midterm",
+      "score": 75,
+      "comments": "Bon début, mais doit améliorer la gestion du stress en situation d'urgence. Connaissances théoriques solides.",
+      "skills": {
+        "clinical_knowledge": 80,
+        "practical_skills": 70,
+        "communication": 75,
+        "professionalism": 80
+      },
+      "validated": true,
+      "validated_at": "2024-12-12T00:00:00.000Z",
+      "created_at": "2024-12-08T00:00:00.000Z",
+      "updated_at": "2024-12-12T00:00:00.000Z"
+    }
+  ],
+  "messages": [],
+  "notifications": [],
+  "documents": []
+}

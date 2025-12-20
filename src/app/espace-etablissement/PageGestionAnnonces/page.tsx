@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react';
 import Header from '@/app/Components/HeaderProps';
 import Footer from '@/app/Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import AnnonceCard from './components/AnnonceCard';
 import TableAnnonces from './components/TableAnnonces';
 import AjoutAnnonceModal from './components/AjoutAnnonceModal';
@@ -13,8 +13,8 @@ import ConfirmationModal from './components/ConfirmationModal';
 import ValidationModal from './components/ValidationModal';
 import FilterAnnonces from './components/FilterAnnonces';
 import SearchBarAnnonces from './components/SearchBarAnnonces.tsx et ConfirmationModal';
-import { 
-  mockAnnonces, 
+import {
+  mockAnnonces,
   mockServices,
   mockHopitaux,
   mockEncadrants,
@@ -25,12 +25,12 @@ import {
   specialitesOptions,
   tagOptions
 } from './models/annonce.model';
-import { 
-  Plus, 
-  FileText, 
-  Users, 
-  Calendar, 
-  Clock, 
+import {
+  Plus,
+  FileText,
+  Users,
+  Calendar,
+  Clock,
   TrendingUp,
   Bell,
   Copy,
@@ -66,14 +66,14 @@ export default function PageGestionAnnonces() {
     const publiees = annonces.filter(a => a.statut === 'publiée').length;
     const actives = annonces.filter(a => a.statut === 'active').length;
     const cloturees = annonces.filter(a => a.statut === 'clôturée').length;
-    
-    const totalCandidatures = annonces.reduce((acc, a) => 
+
+    const totalCandidatures = annonces.reduce((acc, a) =>
       acc + a.candidaturesEnAttente + a.candidaturesAcceptees + a.candidaturesRefusees, 0
     );
-    
+
     const totalPlaces = annonces.reduce((acc, a) => acc + a.placesTotal, 0);
     const placesDisponibles = annonces.reduce((acc, a) => acc + a.placesDisponibles, 0);
-    
+
     const nouvellesAnnonces = annonces.filter(a => a.isNew).length;
     const annoncesUrgentes = annonces.filter(a => {
       const dateLimite = new Date(a.dateLimiteCandidature);
@@ -83,11 +83,11 @@ export default function PageGestionAnnonces() {
     }).length;
 
     // Statistiques pour validations
-    const attenteValidationChef = annonces.filter(a => 
+    const attenteValidationChef = annonces.filter(a =>
       a.statut === 'publiée' && !a.validationChef
     ).length;
-    
-    const attenteValidationEtablissement = annonces.filter(a => 
+
+    const attenteValidationEtablissement = annonces.filter(a =>
       a.statut === 'publiée' && a.validationChef && !a.validationEtablissement
     ).length;
 
@@ -150,7 +150,7 @@ export default function PageGestionAnnonces() {
       result = result.filter(annonce => {
         const dateLimite = new Date(annonce.dateLimiteCandidature);
         const diffJours = Math.ceil((dateLimite.getTime() - maintenant.getTime()) / (1000 * 60 * 60 * 24));
-        
+
         switch (filters.periode) {
           case 'urgent':
             return diffJours <= 7;
@@ -177,10 +177,10 @@ export default function PageGestionAnnonces() {
     const service = mockServices.find(s => s.id === config.serviceId);
     const hopital = mockHopitaux.find(h => h.id === config.hopitalId);
     const chefService = mockEncadrants.find(e => e.id === config.chefServiceId);
-    
+
     // Vérifier les conflits de chef de service
-    const conflitChef = annonces.filter(a => 
-      a.statut !== 'clôturée' && 
+    const conflitChef = annonces.filter(a =>
+      a.statut !== 'clôturée' &&
       a.statut !== 'archivée' &&
       a.chefServiceId === config.chefServiceId
     );
@@ -193,9 +193,9 @@ export default function PageGestionAnnonces() {
     // Vérifier les conflits de dates pour le même service
     const dateDebut = new Date(config.dateDebut);
     const dateFin = new Date(config.dateFin);
-    
-    const conflitDates = annonces.filter(a => 
-      a.statut !== 'clôturée' && 
+
+    const conflitDates = annonces.filter(a =>
+      a.statut !== 'clôturée' &&
       a.statut !== 'archivée' &&
       a.serviceId === config.serviceId &&
       (
@@ -209,12 +209,12 @@ export default function PageGestionAnnonces() {
       alert('Conflit de dates avec un autre stage dans le même service.');
       return;
     }
-  
+
     // Filtrer les encadrants pour s'assurer qu'ils existent
     const encadrants = config.encadrantsIds
       .map(id => mockEncadrants.find(e => e.id === id))
       .filter((encadrant): encadrant is Encadrant => encadrant !== undefined);
-    
+
     const dureeSemaines = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24 * 7));
 
     const newAnnonce: AnnonceStage = {
@@ -256,7 +256,7 @@ export default function PageGestionAnnonces() {
 
     setAnnonces([...annonces, newAnnonce]);
     setShowAddModal(false);
-    
+
     if (config.publierImmediatement) {
       alert(`Annonce "${config.titre}" publiée avec succès ! Email envoyé aux étudiants abonnés.`);
     } else {
@@ -279,7 +279,7 @@ export default function PageGestionAnnonces() {
       alert('Impossible de supprimer un stage en cours.');
       return;
     }
-    
+
     setAnnonces(annonces.filter(annonce => annonce.id !== id));
     setShowDeleteModal(false);
     alert('Annonce supprimée avec succès');
@@ -316,13 +316,13 @@ export default function PageGestionAnnonces() {
 
   const handleChangeStatut = (id: string, statut: AnnonceStage['statut']) => {
     const updates: Partial<AnnonceStage> = { statut };
-    
+
     if (statut === 'publiée' || statut === 'active') {
       updates.datePublication = new Date().toISOString().split('T')[0];
       updates.isNew = true;
       alert('Notification envoyée aux étudiants abonnés !');
     }
-    
+
     if (statut === 'clôturée') {
       updates.dateCloture = new Date().toISOString().split('T')[0];
       alert('Les nouvelles candidatures pour cette annonce sont maintenant suspendues');
@@ -332,13 +332,13 @@ export default function PageGestionAnnonces() {
   };
 
   const handleValidateChef = (id: string) => {
-    setAnnonces(annonces.map(annonce => 
+    setAnnonces(annonces.map(annonce =>
       annonce.id === id ? { ...annonce, validationChef: true } : annonce
     ));
   };
 
   const handleValidateEtablissement = (id: string) => {
-    setAnnonces(annonces.map(annonce => 
+    setAnnonces(annonces.map(annonce =>
       annonce.id === id ? { ...annonce, validationEtablissement: true } : annonce
     ));
   };
@@ -369,7 +369,7 @@ export default function PageGestionAnnonces() {
     };
 
     // Mettre à jour l'annonce
-    setAnnonces(annonces.map(a => 
+    setAnnonces(annonces.map(a =>
       a.id === id ? stageActif : a
     ));
 
@@ -401,7 +401,7 @@ export default function PageGestionAnnonces() {
       dateCloture: new Date().toISOString().split('T')[0]
     };
 
-    setAnnonces(annonces.map(a => 
+    setAnnonces(annonces.map(a =>
       a.id === id ? stageTermine : a
     ));
 
@@ -431,14 +431,14 @@ export default function PageGestionAnnonces() {
   return (
     <>
       <NavbarEtablissement />
-      <Header 
-        spaceName="Publication des Annonces de Stages" 
-        notificationCount={stats.annoncesUrgentes + stats.nouvellesAnnonces + stats.attenteValidationChef} 
+      <Header
+        spaceName="Publication des Annonces de Stages"
+        notificationCount={stats.annoncesUrgentes + stats.nouvellesAnnonces + stats.attenteValidationChef}
       />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         {/* Contenu principal */}
         <main className="flex-1 overflow-x-hidden">
           <div className="p-8">
@@ -637,7 +637,7 @@ export default function PageGestionAnnonces() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
 
       {/* Modals */}
@@ -647,7 +647,7 @@ export default function PageGestionAnnonces() {
           setShowAddModal(false);
           setSelectedAnnonce(null);
         }}
-        onSave={selectedAnnonce ? 
+        onSave={selectedAnnonce ?
           (config) => handleUpdateAnnonce(selectedAnnonce.id, {
             titre: config.titre,
             description: config.description,
@@ -667,7 +667,7 @@ export default function PageGestionAnnonces() {
             statut: config.publierImmediatement ? 'publiée' : 'brouillon',
             datePublication: config.publierImmediatement ? new Date().toISOString().split('T')[0] : null,
             isNew: config.publierImmediatement ? true : false
-          }) : 
+          }) :
           handleAddAnnonce
         }
         services={mockServices}

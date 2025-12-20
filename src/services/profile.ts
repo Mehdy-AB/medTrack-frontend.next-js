@@ -1,100 +1,156 @@
 import api from '@/lib/axios'
+import {
+    mockService,
+    mockStudentProfile,
+    mockEncadrantProfile,
+    mockDashboardStats,
+    mockPaginatedResponse,
+    mockAxiosResponse,
+    delay,
+    mockEncadrantStore
+} from '@/mocks/mockData'
 import type {
-    Establishment,
     CreateEstablishmentRequest,
-    Service,
     CreateServiceRequest,
-    StudentProfile,
     StudentWithUser,
     CreateStudentProfileRequest,
     UpdateStudentProfileRequest,
-    EncadrantProfile,
-    EncadrantWithDetails,
     CreateEncadrantProfileRequest,
-    PaginatedResponse,
-    DashboardStats,
 } from '@/types/api.types'
 
 const PROFILE_BASE = '/profile/api'
 
 export const profileApi = {
     // Establishments
-    listEstablishments: (params?: { city?: string; page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<Establishment>>(`${PROFILE_BASE}/establishments/`, { params }),
+    listEstablishments: async (params?: { city?: string; page?: number; limit?: number }) => {
+        const res = await api.get('/api/mock/establishments', { baseURL: '' });
+        return res;
+    },
 
-    getEstablishment: (id: string) =>
-        api.get<Establishment>(`${PROFILE_BASE}/establishments/${id}/`),
+    getEstablishment: async (id: string) => {
+        // Simple list scan for now as get-by-id endpoint for mock could be simpler
+        const res = await api.get('/api/mock/establishments', { baseURL: '' });
+        const est = res.data.data.find((e: any) => e.id === id);
+        return mockAxiosResponse(est);
+    },
 
-    createEstablishment: (data: CreateEstablishmentRequest) =>
-        api.post<Establishment>(`${PROFILE_BASE}/establishments/`, data),
+    createEstablishment: async (data: CreateEstablishmentRequest) => {
+        return api.post('/api/mock/establishments', data, { baseURL: '' });
+    },
 
-    updateEstablishment: (id: string, data: Partial<CreateEstablishmentRequest>) =>
-        api.patch<Establishment>(`${PROFILE_BASE}/establishments/${id}/`, data),
+    updateEstablishment: async (id: string, data: Partial<CreateEstablishmentRequest>) => {
+        return api.put(`/api/mock/establishments/${id}`, data, { baseURL: '' });
+    },
 
-    deleteEstablishment: (id: string) =>
-        api.delete(`${PROFILE_BASE}/establishments/${id}/`),
+    deleteEstablishment: async (id: string) => {
+        return api.delete(`/api/mock/establishments/${id}`, { baseURL: '' });
+    },
 
     // Services
-    listServices: (params?: { establishment_id?: string; page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<Service>>(`${PROFILE_BASE}/services/`, { params }),
+    listServices: async (params?: { establishment_id?: string; page?: number; limit?: number }) => {
+        return api.get('/api/mock/services', { baseURL: '' });
+    },
 
-    getService: (id: string) =>
-        api.get<Service>(`${PROFILE_BASE}/services/${id}/`),
+    getService: async (id: string) => {
+        const res = await api.get('/api/mock/services', { baseURL: '' });
+        const service = res.data.data.find((s: any) => s.id === id) || mockService;
+        return mockAxiosResponse(service);
+    },
 
-    createService: (data: CreateServiceRequest) =>
-        api.post<Service>(`${PROFILE_BASE}/services/`, data),
+    createService: async (data: CreateServiceRequest) => {
+        return api.post('/api/mock/services', data, { baseURL: '' });
+    },
 
-    updateService: (id: string, data: Partial<CreateServiceRequest>) =>
-        api.patch<Service>(`${PROFILE_BASE}/services/${id}/`, data),
+    updateService: async (id: string, data: Partial<CreateServiceRequest>) => {
+        return api.put(`/api/mock/services/${id}`, data, { baseURL: '' });
+    },
 
-    deleteService: (id: string) =>
-        api.delete(`${PROFILE_BASE}/services/${id}/`),
+    deleteService: async (id: string) => {
+        return api.delete(`/api/mock/services/${id}`, { baseURL: '' });
+    },
 
     // Students
-    listStudents: (params?: { page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<StudentWithUser>>(`${PROFILE_BASE}/students/`, { params }),
+    listStudents: async (params?: { page?: number; limit?: number }) => {
+        return api.get('/api/mock/students', { baseURL: '' });
+    },
 
-    getStudent: (id: string) =>
-        api.get<StudentWithUser>(`${PROFILE_BASE}/students/${id}/`),
+    getStudent: async (id: string) => {
+        const res = await api.get('/api/mock/students', { baseURL: '' });
+        const student = res.data.data.find((s: any) => s.id === id) || mockStudentProfile;
+        return mockAxiosResponse(student);
+    },
 
-    getStudentByUserId: (userId: string) =>
-        api.get<StudentWithUser>(`${PROFILE_BASE}/students/by_user/${userId}/`),
+    getStudentByUserId: async (userId: string) => {
+        const res = await api.get('/api/mock/students', { baseURL: '' });
+        const student = res.data.data.find((s: any) => s.user_id === userId) || mockStudentProfile;
+        return mockAxiosResponse(student);
+    },
 
-    createStudent: (data: CreateStudentProfileRequest & { email: string; password: string }) =>
-        api.post<StudentProfile>(`${PROFILE_BASE}/students/`, data),
+    createStudent: async (data: CreateStudentProfileRequest & { email: string; password: string }) => {
+        return api.post('/api/mock/students', data, { baseURL: '' });
+    },
 
-    updateStudent: (id: string, data: UpdateStudentProfileRequest) =>
-        api.patch<StudentProfile>(`${PROFILE_BASE}/students/${id}/`, data),
+    updateStudent: async (id: string, data: UpdateStudentProfileRequest) => {
+        return api.put(`/api/mock/students/${id}`, data, { baseURL: '' });
+    },
 
     // Update current user's profile (students/me endpoint)
-    updateMyProfile: (data: any) =>
-        api.patch<StudentProfile>(`${PROFILE_BASE}/students/me/`, data),
+    updateMyProfile: async (data: any) => {
+        // This usually updates the logged-in student. We'd need to find them first.
+        // For now, let's assume valid ID is available or just mock success to keep it simple
+        // strictly speaking we should look up user from session?
+        return mockAxiosResponse({ ...mockStudentProfile, ...data });
+    },
 
-    deleteStudent: (id: string) =>
-        api.delete(`${PROFILE_BASE}/students/${id}/`),
+    deleteStudent: async (id: string) => {
+        return api.delete(`/api/mock/students/${id}`, { baseURL: '' });
+    },
 
     // Encadrants
-    listEncadrants: (params?: { establishment_id?: string; page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<EncadrantWithDetails>>(`${PROFILE_BASE}/encadrants/`, { params }),
+    listEncadrants: async (params?: { establishment_id?: string; page?: number; limit?: number }) => {
+        return api.get('/api/mock/encadrants', { baseURL: '' });
+    },
 
-    getEncadrant: (id: string) =>
-        api.get<EncadrantWithDetails>(`${PROFILE_BASE}/encadrants/${id}/`),
+    getEncadrant: async (id: string) => {
+        const res = await api.get('/api/mock/encadrants', { baseURL: '' });
+        const enc = res.data.data.find((e: any) => e.id === id) || mockEncadrantProfile;
+        return mockAxiosResponse(enc);
+    },
 
-    getEncadrantByUserId: (userId: string) =>
-        api.get<EncadrantWithDetails>(`${PROFILE_BASE}/encadrants/by_user/${userId}/`),
+    getEncadrantByUserId: async (userId: string) => {
+        const res = await api.get('/api/mock/encadrants', { baseURL: '' });
+        const enc = res.data.data.find((e: any) => e.user_id === userId) || mockEncadrantProfile;
+        return mockAxiosResponse(enc);
+    },
 
-    createEncadrant: (data: CreateEncadrantProfileRequest & { email: string; password: string }) =>
-        api.post<EncadrantProfile>(`${PROFILE_BASE}/encadrants/`, data),
+    createEncadrant: async (data: CreateEncadrantProfileRequest & { email: string; password: string }) => {
+        return api.post('/api/mock/encadrants', data, { baseURL: '' });
+    },
 
-    updateEncadrant: (id: string, data: Partial<CreateEncadrantProfileRequest>) =>
-        api.patch<EncadrantProfile>(`${PROFILE_BASE}/encadrants/${id}/`, data),
+    updateEncadrant: async (id: string, data: Partial<CreateEncadrantProfileRequest>) => {
+        return api.put(`/api/mock/encadrants/${id}`, data, { baseURL: '' });
+    },
 
-    deleteEncadrant: (id: string) =>
-        api.delete(`${PROFILE_BASE}/encadrants/${id}/`),
+    deleteEncadrant: async (id: string) => {
+        return api.delete(`/api/mock/encadrants/${id}`, { baseURL: '' });
+    },
 
     // Dashboard
-    getDashboardStats: () =>
-        api.get<DashboardStats>(`${PROFILE_BASE}/dashboard-stats/`),
+    getDashboardStats: async () => {
+        // Fetch meaningful stats from DB (optional: implement /api/mock/dashboard/stats)
+        // For now, let's fetch lists and count
+        const [students, establishments] = await Promise.all([
+            api.get('/api/mock/students', { baseURL: '' }),
+            api.get('/api/mock/establishments', { baseURL: '' }),
+        ]);
+
+        return mockAxiosResponse({
+            ...mockDashboardStats,
+            total_students: students.data.total || 0,
+            active_students: students.data.total || 0,
+            total_establishments: establishments.data.total || 0,
+        });
+    },
 }
 
 export default profileApi

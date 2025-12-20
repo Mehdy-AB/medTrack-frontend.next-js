@@ -23,7 +23,7 @@ const DataTable = ({ title, columns, data, onEdit, onDelete, actifKey }: DataTab
       <h2 className="text-xl font-semibold text-gray-900 p-5 border-b border-gray-200">
         {title}
       </h2>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -43,7 +43,7 @@ const DataTable = ({ title, columns, data, onEdit, onDelete, actifKey }: DataTab
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data.map((row, index) => {
-              const isInactive = actifKey && !row[actifKey];
+              const isInactive = !!(actifKey && !row[actifKey]);
               return (
                 <tr
                   key={row.id || index}

@@ -1,4 +1,12 @@
 import api from '@/lib/axios'
+import {
+    mockMessage,
+    mockNotification,
+    mockDocument,
+    mockPaginatedResponse,
+    mockAxiosResponse,
+    delay
+} from '@/mocks/mockData'
 import type {
     Message,
     MessageWithUsers,
@@ -14,83 +22,120 @@ const COMM_BASE = '/comm/api'
 
 export const commApi = {
     // Messages
-    listMessages: (params?: {
+    listMessages: async (params?: {
         sender_id?: string;
         receiver_id?: string;
         unread?: boolean;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<MessageWithUsers>>(`${COMM_BASE}/messages/`, { params }),
+    }) => {
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockMessage]));
+    },
 
-    getMessage: (id: string) =>
-        api.get<MessageWithUsers>(`${COMM_BASE}/messages/${id}/`),
+    getMessage: async (id: string) => {
+        await delay();
+        return mockAxiosResponse(mockMessage);
+    },
 
-    sendMessage: (data: SendMessageRequest) =>
-        api.post<Message>(`${COMM_BASE}/messages/`, data),
+    sendMessage: async (data: SendMessageRequest) => {
+        await delay();
+        // Return a basic Message object (without user details) as per type definition for this endpoint return
+        const msg = {
+            id: 'msg-new',
+            sender_id: 'user-1', // assuming current user
+            receiver_id: data.receiver_id,
+            subject: data.subject || null,
+            body: data.body,
+            created_at: new Date().toISOString(),
+            read_at: null,
+            metadata: data.metadata || null
+        };
+        return mockAxiosResponse(msg);
+    },
 
-    markAsRead: (id: string) =>
-        api.post(`${COMM_BASE}/messages/${id}/read/`),
+    markAsRead: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 
-    deleteMessage: (id: string) =>
-        api.delete(`${COMM_BASE}/messages/${id}/`),
+    deleteMessage: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 
     // Inbox/Sent shortcuts
-    getInbox: (params?: { page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<MessageWithUsers>>(`${COMM_BASE}/messages/inbox/`, { params }),
+    getInbox: async (params?: { page?: number; limit?: number }) => {
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockMessage]));
+    },
 
-    getSentMessages: (params?: { page?: number; limit?: number }) =>
-        api.get<PaginatedResponse<MessageWithUsers>>(`${COMM_BASE}/messages/sent/`, { params }),
+    getSentMessages: async (params?: { page?: number; limit?: number }) => {
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockMessage]));
+    },
 
     // Notifications
-    listNotifications: (params?: {
+    listNotifications: async (params?: {
         type?: string;
         status?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<Notification>>(`${COMM_BASE}/notifications/`, { params }),
+    }) => {
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockNotification]));
+    },
 
-    getNotification: (id: string) =>
-        api.get<Notification>(`${COMM_BASE}/notifications/${id}/`),
+    getNotification: async (id: string) => {
+        await delay();
+        return mockAxiosResponse(mockNotification);
+    },
 
-    createNotification: (data: CreateNotificationRequest) =>
-        api.post<Notification>(`${COMM_BASE}/notifications/`, data),
+    createNotification: async (data: CreateNotificationRequest) => {
+        await delay();
+        return mockAxiosResponse({ ...mockNotification, ...data });
+    },
 
-    markNotificationAsRead: (id: string) =>
-        api.post(`${COMM_BASE}/notifications/${id}/read/`),
+    markNotificationAsRead: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 
-    markAllNotificationsAsRead: () =>
-        api.post(`${COMM_BASE}/notifications/read-all/`),
+    markAllNotificationsAsRead: async () => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 
     // Documents
-    listDocuments: (params?: {
+    listDocuments: async (params?: {
         student_id?: string;
         offer_id?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<Document>>(`${COMM_BASE}/documents/`, { params }),
-
-    getDocument: (id: string) =>
-        api.get<Document>(`${COMM_BASE}/documents/${id}/`),
-
-    uploadDocument: (file: File, metadata?: { student_id?: string; offer_id?: string }) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        if (metadata?.student_id) formData.append('student_id', metadata.student_id)
-        if (metadata?.offer_id) formData.append('offer_id', metadata.offer_id)
-
-        return api.post<DocumentUploadResponse>(`${COMM_BASE}/documents/`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        })
+    }) => {
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockDocument]));
     },
 
-    getDocumentDownloadUrl: (id: string) =>
-        api.get<{ url: string }>(`${COMM_BASE}/documents/${id}/download/`),
+    getDocument: async (id: string) => {
+        await delay();
+        return mockAxiosResponse(mockDocument);
+    },
 
-    deleteDocument: (id: string) =>
-        api.delete(`${COMM_BASE}/documents/${id}/`),
+    uploadDocument: async (file: File, metadata?: { student_id?: string; offer_id?: string }) => {
+        await delay();
+        return mockAxiosResponse({ document: mockDocument, presigned_url: 'http://mock-url' });
+    },
+
+    getDocumentDownloadUrl: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ url: 'http://google.com' });
+    },
+
+    deleteDocument: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 }
 
 export default commApi

@@ -19,6 +19,7 @@ interface StudentFilters {
   promotion: string;
   specialite: string;
   statut: string;
+  [key: string]: string; // Index signature for FilterValue constraint
 }
 
 export default function ListeEtudiantsPage() {
@@ -67,7 +68,7 @@ export default function ListeEtudiantsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.perPage, toQueryParams]);
+  }, [pagination.page, pagination.perPage, filters, search, sort]);
 
   useEffect(() => {
     fetchStudents();

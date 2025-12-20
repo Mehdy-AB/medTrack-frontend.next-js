@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import NavbarEtablissement from '../components/NavbarEtablissement';
+import NavbarEtablissement from '../Components/NavbarEtablissement';
 import Header from '../../Components/HeaderProps';
 import Footer from '../../Components/Footer';
-import SidebarEtablissement from '../components/SidebarEtablissement';
+import SidebarEtablissement from '../Components/SidebarEtablissement';
 import MiniCard from '../../Components/Cards/MiniCard';
 import SearchBarListe from './components/SearchBarListe';
 import FilterListe, { FilterState } from './components/FilterListe';
@@ -87,38 +87,38 @@ export default function ListeEtudiantsPage() {
   // Fonction d'export
   const handleExport = (format: 'pdf' | 'excel') => {
     console.log(`Exportation des étudiants en ${format}`, filteredStudents);
-    
+
     // Créer le contenu d'export
     let exportContent = '';
     let mimeType = 'text/plain';
     let extension = 'txt';
     let filename = `etudiants_${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'excel') {
       // Format CSV pour Excel
       mimeType = 'text/csv';
       extension = 'csv';
-      
+
       // En-tête CSV
       exportContent = 'Nom,Matricule,Promotion,Spécialité,Stage Actuel,Début,Fin,Statut,Note\n';
-      
+
       // Données
       filteredStudents.forEach(student => {
         exportContent += `"${student.nom}","${student.matricule}","${student.promotion}","${student.specialite}",`;
         exportContent += `"${student.stageActuel}","${student.dateDebut}","${student.dateFin}","${student.statut}","${student.note || ''}"\n`;
       });
-      
+
       filename += '.csv';
     } else {
       // Format PDF (simulé avec texte formaté)
       mimeType = 'text/plain';
       extension = 'txt';
-      
+
       exportContent = '=== LISTE DES ÉTUDIANTS ===\n\n';
       exportContent += `Date d'export: ${new Date().toLocaleDateString('fr-FR')}\n`;
       exportContent += `Nombre d'étudiants: ${filteredStudents.length}\n\n`;
       exportContent += '─'.repeat(80) + '\n\n';
-      
+
       filteredStudents.forEach((student, index) => {
         exportContent += `${index + 1}. ${student.nom}\n`;
         exportContent += `   Matricule: ${student.matricule}\n`;
@@ -130,13 +130,13 @@ export default function ListeEtudiantsPage() {
         exportContent += `   Note: ${student.note || 'Non noté'}\n`;
         exportContent += '\n';
       });
-      
+
       exportContent += '─'.repeat(80) + '\n';
       exportContent += 'Fin de la liste\n';
-      
+
       filename += '.txt';
     }
-    
+
     // Créer et télécharger le fichier
     const blob = new Blob([exportContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -147,7 +147,7 @@ export default function ListeEtudiantsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     // Notification
     alert(`${filteredStudents.length} étudiants exportés en ${format.toUpperCase()} !`);
   };
@@ -172,10 +172,10 @@ export default function ListeEtudiantsPage() {
     <>
       <NavbarEtablissement />
       <Header spaceName="Espace Etablissement" notificationCount={5} />
-      
+
       <div className="flex min-h-screen bg-white">
         <SidebarEtablissement />
-        
+
         {/* Contenu principal */}
         <main className="flex-1 bg-white overflow-x-hidden">
           <div className="w-full p-8">
@@ -187,12 +187,12 @@ export default function ListeEtudiantsPage() {
                     Étudiants d etablissement
                   </h1>
                   <p className="text-gray-600">
-                    Liste des étudiants en stage actuellement  
+                    Liste des étudiants en stage actuellement
                   </p>
                 </div>
-                
+
                 {/* MiniCard pour le nombre total */}
-                <MiniCard 
+                <MiniCard
                   label="Total étudiants"
                   count={filteredStudents.length}
                 />
@@ -208,7 +208,7 @@ export default function ListeEtudiantsPage() {
 
             {/* Filtres avec bouton d'export */}
             <div className="mb-6">
-              <FilterListe 
+              <FilterListe
                 onFilterChange={handleFilterChange}
                 onReset={handleReset}
                 onExport={handleExport}
@@ -231,7 +231,7 @@ export default function ListeEtudiantsPage() {
           </div>
         </main>
       </div>
-      
+
       <Footer />
     </>
   );

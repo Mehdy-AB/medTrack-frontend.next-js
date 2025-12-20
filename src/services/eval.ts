@@ -1,4 +1,14 @@
 import api from '@/lib/axios'
+import {
+    mockAttendanceRecord,
+    mockAttendanceList,
+    mockAttendanceSummary,
+    mockEvaluation,
+    mockEvaluationList,
+    mockPaginatedResponse,
+    mockAxiosResponse,
+    delay
+} from '@/mocks/mockData'
 import type {
     AttendanceRecord,
     AttendanceRecordWithDetails,
@@ -18,72 +28,99 @@ const EVAL_BASE = '/eval'
 
 export const evalApi = {
     // Attendance
-    listAttendance: (params?: {
+    listAttendance: async (params?: {
         offer_id?: string;
         student_id?: string;
         date?: string;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<AttendanceRecordWithDetails>>(`${EVAL_BASE}/attendance/`, { params }),
+    }) => {
+        return api.get('/api/mock/attendance', { baseURL: '' });
+    },
 
-    getAttendance: (id: string) =>
-        api.get<AttendanceRecordWithDetails>(`${EVAL_BASE}/attendance/${id}/`),
+    getAttendance: async (id: string) => {
+        const res = await api.get('/api/mock/attendance', { baseURL: '' });
+        const record = res.data.data.find((a: any) => a.id === id) || mockAttendanceRecord;
+        return mockAxiosResponse(record);
+    },
 
-    markAttendance: (data: MarkAttendanceRequest) =>
-        api.post<AttendanceRecord>(`${EVAL_BASE}/attendance/`, data),
+    markAttendance: async (data: MarkAttendanceRequest) => {
+        return api.post('/api/mock/attendance', data, { baseURL: '' });
+    },
 
-    bulkMarkAttendance: (data: BulkMarkAttendanceRequest) =>
-        api.post<AttendanceRecord[]>(`${EVAL_BASE}/attendance/bulk/`, data),
+    bulkMarkAttendance: async (data: BulkMarkAttendanceRequest) => {
+        // For bulk, we could create multiple records or handle specially
+        // For now, just return success
+        return mockAxiosResponse([]);
+    },
 
-    updateAttendance: (id: string, data: Partial<MarkAttendanceRequest>) =>
-        api.patch<AttendanceRecord>(`${EVAL_BASE}/attendance/${id}/`, data),
+    updateAttendance: async (id: string, data: Partial<MarkAttendanceRequest>) => {
+        return api.put(`/api/mock/attendance/${id}`, data, { baseURL: '' });
+    },
 
     // Attendance Summaries
-    listAttendanceSummaries: (params?: {
+    listAttendanceSummaries: async (params?: {
         offer_id?: string;
         student_id?: string;
         validated?: boolean;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<AttendanceSummaryWithDetails>>(`${EVAL_BASE}/attendance-summary/`, { params }),
+    }) => {
+        // Summaries could be computed from attendance records
+        // For now, return mock structure
+        await delay();
+        return mockAxiosResponse(mockPaginatedResponse([mockAttendanceSummary]));
+    },
 
-    getAttendanceSummary: (id: string) =>
-        api.get<AttendanceSummaryWithDetails>(`${EVAL_BASE}/attendance-summary/${id}/`),
+    getAttendanceSummary: async (id: string) => {
+        await delay();
+        return mockAxiosResponse(mockAttendanceSummary);
+    },
 
-    validateAttendance: (id: string) =>
-        api.post(`${EVAL_BASE}/attendance-summary/${id}/validate/`),
+    validateAttendance: async (id: string) => {
+        await delay();
+        return mockAxiosResponse({ success: true } as any);
+    },
 
     // Evaluations
-    listEvaluations: (params?: {
+    listEvaluations: async (params?: {
         offer_id?: string;
         student_id?: string;
         evaluator_id?: string;
         validated?: boolean;
         page?: number;
         limit?: number
-    }) =>
-        api.get<PaginatedResponse<EvaluationWithDetails>>(`${EVAL_BASE}/evaluations/`, { params }),
+    }) => {
+        return api.get('/api/mock/evaluations', { baseURL: '' });
+    },
 
-    getEvaluation: (id: string) =>
-        api.get<EvaluationWithDetails>(`${EVAL_BASE}/evaluations/${id}/`),
+    getEvaluation: async (id: string) => {
+        const res = await api.get('/api/mock/evaluations', { baseURL: '' });
+        const evaluation = res.data.data.find((e: any) => e.id === id) || mockEvaluation;
+        return mockAxiosResponse(evaluation);
+    },
 
-    createEvaluation: (data: CreateEvaluationRequest) =>
-        api.post<Evaluation>(`${EVAL_BASE}/evaluations/`, data),
+    createEvaluation: async (data: CreateEvaluationRequest) => {
+        return api.post('/api/mock/evaluations', data, { baseURL: '' });
+    },
 
-    updateEvaluation: (id: string, data: UpdateEvaluationRequest) =>
-        api.patch<Evaluation>(`${EVAL_BASE}/evaluations/${id}/`, data),
+    updateEvaluation: async (id: string, data: UpdateEvaluationRequest) => {
+        return api.put(`/api/mock/evaluations/${id}`, data, { baseURL: '' });
+    },
 
-    validateEvaluation: (id: string, data: ValidateEvaluationRequest) =>
-        api.post(`${EVAL_BASE}/evaluations/${id}/validate/`, data),
+    validateEvaluation: async (id: string, data: ValidateEvaluationRequest) => {
+        return api.put(`/api/mock/evaluations/${id}`, { ...data, validated: true }, { baseURL: '' });
+    },
 
-    deleteEvaluation: (id: string) =>
-        api.delete(`${EVAL_BASE}/evaluations/${id}/`),
+    deleteEvaluation: async (id: string) => {
+        return api.delete(`/api/mock/evaluations/${id}`, { baseURL: '' });
+    },
 
     // My Evaluations (for students)
-    getMyEvaluations: () =>
-        api.get<EvaluationWithDetails[]>(`${EVAL_BASE}/evaluations/my/`),
+    getMyEvaluations: async () => {
+        const res = await api.get('/api/mock/evaluations', { baseURL: '' });
+        return mockAxiosResponse(res.data.data || []);
+    },
 }
 
 export default evalApi
